@@ -44,9 +44,15 @@ Tom posts updates to LinkedIn documenting the learning journey. The CrowdComms p
 Phase 1: Project Setup & Core Models
 
 ## Current Status
-- Venv created, CLAUDE.md and course files in place
-- Model plan written in notes.txt
-- Tom is scaffolding the Django project, app, and models now
+- Django project scaffolded (`registrant_dashboard`)
+- App created: `registrants`
+- Docker + Postgres running
+- django-environ set up for .env
+- Superuser created
+- Event model complete and migrated
+- Registrant model in progress (FK, choices fields still to add)
+- StatusChange model still TODO
+- Drafted LinkedIn message to CrowdComms principal about "registrant-first" approach
 
 ## Session Notes
 
@@ -75,3 +81,31 @@ Phase 1: Project Setup & Core Models
 - Writes the models in code
 - Runs migrations
 - Then we begin Phase 1 proper: **Creating Serializers** (first new concept)
+
+### Session 2 — 2026-02-18
+**Topic:** Project setup, Docker, models, LinkedIn outreach
+
+**What happened:**
+- Set up Django project (`registrant_dashboard`) and `registrants` app
+- Configured docker-compose.yml for Postgres container (referenced TaxConductor setup)
+- Troubleshot `.env` loading — learned how `BASE_DIR` resolves via `os.path.dirname()` chains
+- Configured django-environ; discussed benefit over python-dotenv (type casting, defaults, Django-specific helpers)
+- Decided on `registrants` as the app name (discussed conventions — short, simple, plural)
+- Event model written and migrated to DB
+- Created superuser to verify models in admin
+- Registrant model started — still needs FK to Event, choices for guest_type and status
+- StatusChange model still TODO
+- Discussed `DateField` vs `DateTimeField` for Event.date — decided DateField since we don't need event open/close times
+- Drafted and refined LinkedIn message to CrowdComms principal asking about "registrant-first" meaning
+- Discussed how to present own thinking without overstating confidence
+
+**Decisions made:**
+- Single app (`registrants`) for all three models — they're tightly coupled
+- Using django-environ for env config
+- DateField for Event.date
+
+**What's next:**
+- Finish Registrant model (FK, choices fields)
+- Build StatusChange model
+- Migrate and verify in admin
+- Then: serializers (first new concept)
