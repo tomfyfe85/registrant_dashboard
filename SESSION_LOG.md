@@ -46,13 +46,13 @@ Phase 1: Project Setup & Core Models
 ## Current Status
 - Django project scaffolded (`registrant_dashboard`)
 - App created: `registrants`
-- Docker + Postgres running
+- Docker + Postgres running (with named volume for data persistence)
 - django-environ set up for .env
 - Superuser created
-- Event model complete and migrated
-- Registrant model in progress (FK, choices fields still to add)
-- StatusChange model still TODO
+- All three models complete and migrated: Event, Registrant, StatusChange
+- Models registered and visible in Django admin
 - Drafted LinkedIn message to CrowdComms principal about "registrant-first" approach
+- Decided: StatusChange auto-creation on new registrant will live in the API layer (serializers)
 
 ## Session Notes
 
@@ -109,3 +109,32 @@ Phase 1: Project Setup & Core Models
 - Build StatusChange model
 - Migrate and verify in admin
 - Then: serializers (first new concept)
+
+### Session 2 (continued) — 2026-02-19
+**Topic:** Completing models, Docker volumes, StatusChange design
+
+**What happened:**
+- Completed Registrant model: added ForeignKey to Event (PROTECT), choices for guest_type and current_status
+- Learned Django choices pattern: constants + dictionary, database value vs display value, single source of truth
+- Built StatusChange model: FK to Registrant (CASCADE), status field referencing Registrant's choices, DateTimeField with auto_now_add=True
+- Debugged several issues:
+  - Can't use instance attributes as field defaults (class-level vs instance-level)
+  - `status_choices.REGISTERED` doesn't work on a dict — use `Registrant.REGISTERED` directly
+  - `timezone.now()` with parentheses evaluates once at class load, not per-record — switched to auto_now_add=True
+- Added Docker named volume (`db-data`) for Postgres data persistence — data was being lost between container restarts
+- Ran migrations successfully, verified all models in Django admin
+- Discussed where StatusChange auto-creation logic should live (model layer via signals vs API layer via serializers)
+
+**Concepts learned:**
+- Django choices pattern (constants + dict, max_length must accommodate the DB values)
+- Sharing choices between models via class attribute references (`Registrant.REGISTRANT_STATUS_CHOICES`)
+- `auto_now_add=True` vs `default=timezone.now` (callable without parentheses)
+- Docker named volumes for data persistence
+- on_delete strategies: PROTECT (safety net for Event), CASCADE (history dies with registrant)
+
+**Decisions made:**
+- StatusChange auto-creation will be handled in the API layer (serializers), not model signals — keeps it explicit and visible
+- on_delete: Event→Registrant uses PROTECT, Registrant→StatusChange uses CASCADE
+
+**What's next:**
+- Begin Phase 1 proper: Creating Serializers (first new DRF concept)

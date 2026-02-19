@@ -1,7 +1,5 @@
 from django.db import models
 from datetime import date
-from django.utils import timezone
-
 
 
 class Event(models.Model):
@@ -10,7 +8,7 @@ class Event(models.Model):
   capacity = models.IntegerField()
 
   def __str__(self):
-    return f"{self.name} - {self.date} - {self.capacity} cap"
+    return f"Name: {self.name} - Date: {self.date} - Capacity: {self.capacity}"
   
 class Registrant(models.Model):
     # guest_type
@@ -46,13 +44,16 @@ class Registrant(models.Model):
     guest_type = models.CharField(choices=REGISTRANT_TYPE_CHOICES, default=STANDARD, max_length=3)
     current_status = models.CharField(choices=REGISTRANT_STATUS_CHOICES, default=REGISTERED, max_length=3)
 
+    def __str__(self):
+      return f"Reg_name: {self.name} - Reg_email: {self.email} - Reg_company: {self.company} - Event: {self.event.name} - Reg_type: {self.guest_type} - Reg_status: {self.current_status}"
 
 
 class StatusChange(models.Model):
-    
     status_choices = Registrant.REGISTRANT_STATUS_CHOICES
 
     registrant = models.ForeignKey(Registrant, on_delete=models.CASCADE)
     status = models.CharField(choices=status_choices, default=Registrant.REGISTERED, max_length=3)
-    date = models.DateTimeField(auto_now_add=True)
+    date_time = models.DateTimeField(auto_now_add=True)
 
+    # def __str__(self):
+    #   return f"Reg_id: {self.registrant.id} - Reg_name: {self.registrant.name} - Reg_status: {self.status} - Time_of_status_change: {self.date_time}"
