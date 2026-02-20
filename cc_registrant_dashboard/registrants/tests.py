@@ -9,7 +9,6 @@ def test_create_registrant():
     response = client.post('/registrants/create', {'name': 'test1', 'email': 'test1@gmail.com',
                                         'company': 'test1_company',
                                         'event': test_event1.id}, format='json')
-    
     assert response.status_code == 201
 
 
