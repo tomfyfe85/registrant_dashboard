@@ -20,5 +20,6 @@ from registrants import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('registrants/events', views.event_list)
+    path('registrants/events', views.event_list),
+    path('registrants/create', views.create_registrant)
 ]

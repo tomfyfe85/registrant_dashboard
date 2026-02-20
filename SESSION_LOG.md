@@ -49,12 +49,14 @@ Phase 1: Project Setup & Core Models
 - Docker + Postgres running (with named volume for data persistence)
 - django-environ set up for .env
 - DRF installed and added to INSTALLED_APPS
+- pytest + pytest-django installed, pytest.ini configured
 - Superuser created
 - All three models complete and migrated: Event, Registrant, StatusChange
 - Models registered and visible in Django admin
-- First serializer built: EventSerializer (ModelSerializer)
-- First API endpoint working: event_list view returning JSON via serializer
-- Currently using plain Django views + DRF serializer (hybrid); next step is full DRF views
+- EventSerializer and RegistrantSerializer built (ModelSerializer)
+- event_list (GET) and create_registrant (POST) endpoints working
+- Full DRF views: @api_view + Response (no longer hybrid)
+- First passing test: test_create_registrant (201 status)
 - Decided: StatusChange auto-creation on new registrant will live in the API layer (serializers)
 
 ## Session Notes
@@ -173,4 +175,37 @@ Phase 1: Project Setup & Core Models
 **What's next:**
 - Switch to full DRF views: `@api_view` decorator and `Response` instead of `@csrf_exempt` and `JsonResponse`
 - Build Registrant and StatusChange serializers
+- Eventually: class-based views, ViewSets, routers
+
+### Session 4 — 2026-02-20
+**Topic:** DRF views, RegistrantSerializer, POST endpoint, testing
+
+**What happened:**
+- Upgraded event_list view from plain Django (@csrf_exempt + JsonResponse) to full DRF (@api_view + Response)
+- Removed unused try/except DoesNotExist — .all() never raises it
+- Built RegistrantSerializer (ModelSerializer)
+- Built create_registrant POST endpoint
+- Discussed URL routing: URL routes to view, @api_view decorator handles method filtering (not the URL)
+- Discussed DRY principle: one URL per resource, HTTP method determines action
+- Discussed views.py split: one file is fine at this scale, split when it grows
+- Installed pytest-django, configured pytest.ini with DJANGO_SETTINGS_MODULE
+- Wrote first test: test_create_registrant — creates Event, POSTs registrant, asserts 201
+- @pytest.mark.django_db decorator required for any test that touches the ORM
+
+**Concepts learned:**
+- @api_view(['POST']) — method whitelist, returns 405 for anything else
+- DRF Response vs JsonResponse — Response handles content negotiation, works with DRF renderer
+- @pytest.mark.django_db — grants database access for individual tests
+- APIClient — DRF test client for making requests to endpoints
+- Event.objects.create() — keyword arguments, not dict syntax
+- response.status_code — not response.status
+- Test structure: setup (create event) → action (POST) → assertion (status code)
+
+**Decisions made:**
+- One views.py for now — split when file grows
+- Tests live in registrants/tests.py
+
+**What's next:**
+- Implement StatusChange auto-creation in create_registrant view
+- Write test to verify StatusChange is created alongside new Registrant
 - Eventually: class-based views, ViewSets, routers
