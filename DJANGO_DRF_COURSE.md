@@ -149,4 +149,126 @@ Once you understand serializers, you'll learn:
 
 ---
 
-*Last updated: 2026-02-12*
+*Last updated: 2026-02-22*
+
+---
+
+## Data Migrations
+
+Data Migrations
+===============
+
+CONCEPT: What Is It?
+--------------------
+A data migration is a Django migration that doesn't just change the *structure*
+of the database (schema) — it also transforms the *data inside it*.
+
+Django has two types of migrations:
+- **Schema migrations** — add/remove/alter columns and tables (auto-generated)
+- **Data migrations** — run Python code to manipulate data (written by you)
+
+WHY IT EXISTS:
+- Sometimes you need to change how data is stored, not just its structure
+- Simply altering a column type can destroy existing data
+- Data migrations let you transform data safely before or after schema changes
+
+HOW IT WORKS (safe approach for changing a CharField to a ForeignKey):
+- Step 1: Add the new ForeignKey column as NULLABLE (existing rows unaffected)
+- Step 2: Write a data migration — loop through existing rows, create the
+          related objects, and populate the new column
+- Step 3: Make the column non-nullable (now all rows have valid FK values)
+- Step 4: Drop the old CharField
+
+Each step is a separate migration file. The database is never in a broken state.
+
+KEY INSIGHT:
+Never try to change a column's type and migrate existing data in one step.
+Always separate "add the new structure" from "move the data" from "remove the old structure".
+
+MAIN USE CASES:
+1. Changing a CharField to a ForeignKey (extracting a lookup table)
+2. Splitting one column into two
+3. Populating a new column based on logic from other columns
+4. Backfilling data after adding a new required field
+
+---
+
+### The Multi-Step Pattern (CharField → ForeignKey)
+
+**The wrong way (one step):**
+```
+CharField("Google") → ForeignKey(company_id=1)
+```
+Django tries to cast "Google" to an integer. Fails immediately.
+
+**The right way (three steps):**
+
+#### Step 1 — Add nullable ForeignKey (schema migration)
+In `models.py`, add the new field alongside the old one:
+```python
+company = models.CharField(max_length=255)           # old — keep for now
+company_fk = models.ForeignKey(                      # new — nullable
+    Company,
+    on_delete=models.PROTECT,
+    null=True,
+    blank=True
+)
+```
+Run `makemigrations`. Existing rows get `company_fk = NULL`. Nothing breaks.
+
+#### Step 2 — Data migration (populate the new column)
+Create an empty migration:
+```bash
+python manage.py makemigrations --empty registrants --name populate_company_fk
+```
+
+Then write the `RunPython` function:
+```python
+from django.db import migrations
+
+def populate_company_fk(apps, schema_editor):
+    Registrant = apps.get_model('registrants', 'Registrant')
+    Company = apps.get_model('registrants', 'Company')
+
+    for registrant in Registrant.objects.all():
+        company, _ = Company.objects.get_or_create(name=registrant.company)
+        registrant.company_fk = company
+        registrant.save()
+
+def reverse_populate(apps, schema_editor):
+    Registrant = apps.get_model('registrants', 'Registrant')
+    for registrant in Registrant.objects.all():
+        if registrant.company_fk:
+            registrant.company = registrant.company_fk.name
+            registrant.save()
+
+class Migration(migrations.Migration):
+    dependencies = [('registrants', '0004_...')]
+
+    operations = [
+        migrations.RunPython(populate_company_fk, reverse_populate),
+    ]
+```
+
+**Note:** Inside data migrations, always use `apps.get_model()` — never import
+models directly. This gives you the model as it was at *that point in history*,
+not its current state. This prevents subtle bugs when the model changes later.
+
+#### Step 3 — Remove old field, make new one non-nullable (schema migration)
+In `models.py`:
+```python
+company = models.ForeignKey(Company, on_delete=models.PROTECT)  # renamed, non-nullable
+```
+Remove the old `company` CharField. Run `makemigrations`. Django now makes
+`company_fk` non-nullable since all rows have been populated.
+
+---
+
+### Interview Answer Template
+
+*"We needed to extract a CharField into a proper lookup table with a ForeignKey.
+Rather than do it in one migration — which would fail trying to cast strings to
+integers — we split it into three steps: first add the nullable ForeignKey
+column, then write a data migration using RunPython to create the Company records
+and backfill the new column, then drop the old column and make the FK non-nullable.
+The database was never in a broken state, and the migration was fully reversible."*

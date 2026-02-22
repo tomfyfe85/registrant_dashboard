@@ -209,3 +209,39 @@ Phase 1: Project Setup & Core Models
 - Implement StatusChange auto-creation in create_registrant view
 - Write test to verify StatusChange is created alongside new Registrant
 - Eventually: class-based views, ViewSets, routers
+
+### Session 5 — 2026-02-22
+**Topic:** Dashboard design, Company model, data migrations, VSCode theme
+
+**What happened:**
+- Discussed what the dashboard needs to show: count per status (registered, checked-in, entered, exited, cancelled), total attendees, count per company
+- Decided `company` should be a separate `Company` model (ForeignKey) rather than a free-text CharField — prevents "Google" / "google" / "Google Inc" ambiguity
+- Company model added with just `name` field; Registrant.company changed from CharField to ForeignKey
+- Hit a migration error: existing row had `company="testcomp1"` — Django tried to cast the string to bigint (FK integer) and failed
+- Discussed the *professional* multi-step migration pattern for this scenario (see DJANGO_DRF_COURSE.md)
+- Textbook entry written in DJANGO_DRF_COURSE.md: Data Migrations — the full three-step pattern with code and interview answer template
+- VSCode Semantic Darcula theme customised extensively: unified background colour (#242424), muted sidebar text (#7D8B99), soft editor text (#C5CDD6), orange badges (#CC8242), operator colours to match keywords (#CC8242), True/False/None in amber (#FFC66D), f-string prefix purple (#9E7BB0)
+
+**Strategic thinking:**
+- Tom's priority: get the MVP up across the full stack (Django/DRF → FastAPI → Redis → Celery) before the CrowdComms interview (next month)
+- Plan: finish DRF MVP with function-based views, do one refactor session to class-based/generic views, then move on to FastAPI
+- Tom can talk about the multi-step migration pattern in the interview — real-world scenario, professional answer
+
+**Concepts learned:**
+- Why ForeignKey > CharField for lookup data (data consistency, query reliability)
+- Data migration error: Django can't cast existing string data when converting to FK
+- Multi-step migration pattern: add nullable FK → data migration (RunPython) → drop old field
+- `apps.get_model()` inside data migrations (never import models directly — use historical state)
+- `get_or_create()` pattern for idempotent data operations
+- Difference between schema migrations (auto-generated) and data migrations (hand-written RunPython)
+
+**Decisions made:**
+- Company is a proper model, not a CharField — consistent data for dashboard queries
+- Will implement the multi-step migration pattern professionally (not the quick delete-and-migrate dev shortcut)
+- MVP-first strategy: breadth across the stack > perfecting DRF
+
+**What's next:**
+- Implement the multi-step data migration for Company (Step 1: add nullable FK)
+- Write data migration (RunPython) to populate company_fk from existing company string
+- Drop old CharField, make FK non-nullable
+- Continue CRUD endpoints for the dashboard
