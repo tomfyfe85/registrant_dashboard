@@ -245,3 +245,34 @@ Phase 1: Project Setup & Core Models
 - Write data migration (RunPython) to populate company_fk from existing company string
 - Drop old CharField, make FK non-nullable
 - Continue CRUD endpoints for the dashboard
+
+### Session 6 — 2026-03-03
+**Topic:** Data migration implementation (Step 2), VSCode theme exploration, communication
+
+**What happened:**
+- Explored many VSCode themes: Semantic Darcula, Dracula Dimmed, Monokai Pro, Nord, Tokyo Night — settled on Tokyo Night
+- Extensive VS Code colour customisation: parameter/self colours (terracotta), operator colours, semantic vs TextMate token differences
+- Learned that Pylance semantic tokens override TextMate rules — need semantic token rules in settings.json alongside TextMate rules to get consistent colours
+- Discussed project roadmap: DRF MVP → FastAPI → Redis/Celery → RAG/AI layer (event Q&A chatbot idea)
+- Step 1 of Company migration already complete (nullable FK added in migration 0004)
+- Created empty migration 0005 with `python manage.py makemigrations registrants --empty`
+- Working through writing the `update_company_fk` RunPython function — understanding `apps.get_model()`, `.objects.all()`, `get_or_create()` return value, and why you assign the result back to `registrant.company_fk` and save
+
+**Concepts learned/reinforced:**
+- VSCode: semantic tokens (Pylance) vs TextMate grammar scopes — semantic tokens win when both are set
+- `parameter` and `parameter.declaration` semantic token types for coloring function arguments
+- `apps.get_model()` returns the model class — you still need `.objects.all()` to get records
+- `get_or_create()` returns a tuple: `(object, created_boolean)` — use `_` to discard the boolean when you don't need it
+- Why you need the return value of `get_or_create`: you need the Company object to assign to `registrant.company_fk`
+- `makemigrations --empty` requires an app label
+
+**Decisions made:**
+- Tokyo Night as current VSCode theme
+- AI layer (event Q&A chatbot using RAG) is a good addition for later phases
+
+**What's next:**
+- Finish writing RunPython function in migration 0005
+- Run `python manage.py migrate` to apply the data migration
+- Verify data in admin or shell
+- Step 3: drop company CharField, make company_fk non-nullable
+- Continue CRUD endpoints for the dashboard

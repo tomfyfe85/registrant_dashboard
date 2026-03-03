@@ -43,10 +43,7 @@ class Registrant(models.Model):
     }   
 
     email = models.EmailField()
-    # company = models.ForeignKey(Company, on_delete=models.PROTECT)
-    company = models.CharField(max_length=255)
-    company_fk = models.ForeignKey(Company, on_delete=models.PROTECT, null=True)
-
+    company_fk = models.ForeignKey(Company, on_delete=models.PROTECT)
     event = models.ForeignKey(Event, on_delete=models.PROTECT)
     guest_type = models.CharField(choices=REGISTRANT_TYPE_CHOICES, default=STANDARD, max_length=3)
     current_status = models.CharField(choices=REGISTRANT_STATUS_CHOICES, default=REGISTERED, max_length=3)
@@ -64,4 +61,7 @@ class StatusChange(models.Model):
     def __str__(self):
         return f"Reg_id: {self.registrant.id} - Reg_status: {self.status} - Time_of_status_change: {self.date_time}"
 
+
+# TODO
+# Add name back to Registrants and StatusChange
 #  Reg_name: {self.registrant.name} -

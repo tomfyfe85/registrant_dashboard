@@ -10,8 +10,8 @@ def update_company_fk(apps, schema_editor):
     all_registrants = registrant_model.objects.all()
     
     for registrant in all_registrants:
-        company, _ = company.objects.get_or_create(name=registrant.company)
-        registrant.company_fk = company
+        company_obj, _ = company.objects.get_or_create(name=registrant.company)
+        registrant.company_fk = company_obj
         registrant.save()
 
 
