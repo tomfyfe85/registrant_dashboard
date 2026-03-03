@@ -16,7 +16,6 @@ class Company(models.Model):
     def __str__(self):
         return f"Company: {self.name}"
 
-
 class Registrant(models.Model):
     # guest_type
     STANDARD = 'STN'
