@@ -62,5 +62,6 @@ class StatusChange(models.Model):
     date_time = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
-        return f"Reg_id: {self.registrant.id} - Reg_name: {self.registrant.name} - Reg_status: {self.status} - Time_of_status_change: {self.date_time}"
+        return f"Reg_id: {self.registrant.id} - Reg_status: {self.status} - Time_of_status_change: {self.date_time}"
 
+#  Reg_name: {self.registrant.name} -
