@@ -22,11 +22,9 @@ class Registrant(models.Model):
     CREW = 'CRW'
     VIP = 'VIP'
     ARTIST = 'ART'
+    
     REGISTRANT_TYPE_CHOICES = {
         STANDARD: "Standard",
-        CREW: 'Crew',
-        VIP: 'VIP',
-        ARTIST: "Artist"
     }
 
     # current_status
@@ -35,6 +33,7 @@ class Registrant(models.Model):
     ENTERED = "ENT"
     EXITED = "EXT"
     CANCELLED = "CAN"
+    
     REGISTRANT_STATUS_CHOICES = {
         REGISTERED: "Registered",
         CHECKED_IN: "Checked_in",
@@ -43,7 +42,6 @@ class Registrant(models.Model):
         CANCELLED: "Cancelled",
     }   
 
-    name = models.CharField(max_length=255)
     email = models.EmailField()
     # company = models.ForeignKey(Company, on_delete=models.PROTECT)
     company = models.CharField(max_length=255)
@@ -54,7 +52,7 @@ class Registrant(models.Model):
     current_status = models.CharField(choices=REGISTRANT_STATUS_CHOICES, default=REGISTERED, max_length=3)
     
     def __str__(self):
-      return f"Reg_name: {self.name} - Reg_email: {self.email} - Reg_company: {self.company} - Event: {self.event.name} - Reg_type: {self.guest_type} - Reg_status: {self.current_status}"
+      return f"Reg_email: {self.email} - Reg_company: {self.company} - Reg_company_fk: {self.company_fk}  - Event: {self.event.name} - Reg_type: {self.guest_type} - Reg_status: {self.current_status}"
 
 
 class StatusChange(models.Model):
