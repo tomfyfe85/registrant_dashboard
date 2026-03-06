@@ -6,12 +6,13 @@ class Event(models.Model):
     name = models.CharField(max_length=255)
     date = models.DateField(default=date.today)
     capacity = models.IntegerField()
+    
     def __str__(self):
         return f"Name: {self.name} - Date: {self.date} - Capacity: {self.capacity}"
     
 
 class Company(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255) 
     
     def __str__(self):
         return f"Company: {self.name}"
@@ -40,8 +41,9 @@ class Registrant(models.Model):
         ENTERED:"Entered",
         EXITED: "Exited",
         CANCELLED: "Cancelled",
-    }   
-
+    }
+       
+    name = models.CharField()
     email = models.EmailField()
     company_fk = models.ForeignKey(Company, on_delete=models.PROTECT)
     event = models.ForeignKey(Event, on_delete=models.PROTECT)
@@ -49,7 +51,7 @@ class Registrant(models.Model):
     current_status = models.CharField(choices=REGISTRANT_STATUS_CHOICES, default=REGISTERED, max_length=3)
     
     def __str__(self):
-      return f"Reg_email: {self.email} - Reg_company: {self.company} - Reg_company_fk: {self.company_fk}  - Event: {self.event.name} - Reg_type: {self.guest_type} - Reg_status: {self.current_status}"
+      return f"Reg_email: {self.email} - Reg_company_fk: {self.company_fk}  - Event: {self.event.name} - Reg_type: {self.guest_type} - Reg_status: {self.current_status}"
 
 
 class StatusChange(models.Model):
@@ -59,7 +61,7 @@ class StatusChange(models.Model):
     date_time = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
-        return f"Reg_id: {self.registrant.id} - Reg_status: {self.status} - Time_of_status_change: {self.date_time}"
+        return f"Reg_id: {self.registrant.id} - Reg_name: {self.registrant.name} - Reg_status: {self.status} - Time_of_status_change: {self.date_time}"
 
 
 # TODO

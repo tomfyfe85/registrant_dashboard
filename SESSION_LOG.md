@@ -276,3 +276,35 @@ Phase 1: Project Setup & Core Models
 - Verify data in admin or shell
 - Step 3: drop company CharField, make company_fk non-nullable
 - Continue CRUD endpoints for the dashboard
+
+### Session 7 — 2026-03-04
+**Topic:** Data migration completion, Company model design discussion, VSCode theme customisation
+
+**What happened:**
+- Completed the `update_company_fk` RunPython function in migration 0005 — loops through registrants, uses `get_or_create` to find/create Company records, assigns result to `company_fk`, saves
+- Ran migration successfully — verified in Django admin that `company_fk` was populated correctly
+- Completed Step 3: dropped old `company` CharField, made `company_fk` non-nullable (migration 0006)
+- Full three-step data migration pattern now complete
+- Discussed Company model design: why `choices` wouldn't work for companies (changes per event, needs runtime management), why ForeignKey + Company model is the right approach
+- Discussed that companies will be pre-loaded by the organiser; registrants pick from the list
+- Discussed that organiser needs full CRUD over companies via the admin panel
+- Switched VSCode theme to Tokyo Midnight; customised sidebar, tabs, breadcrumb, terminal to match editor background (`#26262e`)
+- Wrote and refined a LinkedIn post about the three-step data migration pattern
+
+**Concepts learned/reinforced:**
+- `get_or_create` returns a tuple — the object and a boolean; use `_` to discard the boolean
+- Assigning a model object to a ForeignKey field (not the `.id`) — Django handles the integer storage
+- Why variable naming matters inside migrations — overwriting the model class variable causes bugs on second loop iteration
+- `choices` vs ForeignKey: choices are for fixed, code-defined lists; ForeignKey is for runtime-managed data
+- Django admin gives organisers CRUD over Company records without code changes
+
+**Decisions made:**
+- Companies are pre-loaded by event organiser; registrants pick from dropdown
+- Organiser manages companies via Django admin panel
+- Tokyo Midnight as current VSCode theme
+
+**What's next:**
+- Continue CRUD endpoints for the dashboard
+- Registration endpoint: accept `company_fk` id, validate against Company model
+- Refactor to class-based/generic views
+- FastAPI, Redis, Celery phases
