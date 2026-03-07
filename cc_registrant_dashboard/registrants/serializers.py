@@ -9,4 +9,4 @@ class EventSerializer(serializers.ModelSerializer):
 class RegistrantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Registrant
-        fields = ['id', 'name', 'email', 'company', 'event', 'guest_type', 'current_status'] 
+        fields = ['id', 'name', 'email', 'company_fk', 'event', 'guest_type', 'current_status'] 

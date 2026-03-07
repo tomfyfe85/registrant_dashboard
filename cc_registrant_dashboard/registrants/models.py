@@ -43,7 +43,7 @@ class Registrant(models.Model):
         CANCELLED: "Cancelled",
     }
        
-    name = models.CharField()
+    name = models.CharField(max_length=255)
     email = models.EmailField()
     company_fk = models.ForeignKey(Company, on_delete=models.PROTECT)
     event = models.ForeignKey(Event, on_delete=models.PROTECT)
