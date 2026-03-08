@@ -31,16 +31,19 @@ def create_registrant(request):
     print(type(request.data))
     if serializer.is_valid():
         #add status_update_changer 
-        serializer.save()
+        status1 = serializer.save()
+        print(type(status1))
+        status_update_changer(status1)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
   
 
 # helper to update status on new registrant
     # event = Stavent.objects.create(registrant=new_registrant)
     
-# def status_update_changer(new_registrant):
-#     StatusChange.objects.create(registrant=new_registrant)
+def status_update_changer(new_registrant):
+    StatusChange.objects.create(registrant=new_registrant)
     # StatusChangeSerializer(status_change)
     
 
