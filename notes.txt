@@ -1,5 +1,1 @@
-Models:
-
-Event — name, date, capacity
-Registrant — name, email, company, event (FK), guest type (choices), current status (choices)
-StatusChange — registrant (FK), status, timestamp
+Added helper function to post registrant view
