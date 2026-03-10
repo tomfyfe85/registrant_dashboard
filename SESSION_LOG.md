@@ -308,3 +308,41 @@ Phase 1: Project Setup & Core Models
 - Registration endpoint: accept `company_fk` id, validate against Company model
 - Refactor to class-based/generic views
 - FastAPI, Redis, Celery phases
+
+### Session 8 — 2026-03-10
+**Topic:** MVP planning, architecture decisions, DRF views progress
+
+**What happened:**
+- Clarified the full project vision: a registrant dashboard for a large live event — organiser sees real-time status of all guests
+- Designed the tech stack split:
+  - Django/DRF: registrant CRUD, admin, dashboard summary
+  - FastAPI: high-frequency status update endpoint (check-in desk — handles volume spike when guests arrive)
+  - Redis: cache dashboard counts + Celery message broker
+  - Celery: async task triggered on status change (e.g. badge print trigger, notification)
+- Added `name` field back to Registrant model (had been accidentally removed) with max_length=255
+- Fixed RegistrantSerializer fields (had stale `name` and `company` fields from before migration — corrected to `company_fk`)
+- Removed `status_choices` from StatusChangeSerializer fields (class attribute, not a model field)
+- StatusChange auto-creation implemented: `status_update_changer(registrant)` helper in views.py, called from `create_registrant` after `serializer.save()`
+- Helper reads `registrant.current_status` directly — no need to import/reference `Registrant.REGISTERED` explicitly
+- Discussed: `serializer.save()` returns the saved model instance
+- Discussed: option 2 ("Ignore for now") is the right answer when making a nullable FK non-nullable, if the data migration has already populated all rows
+- Switched VSCode theme to Vira Graphene
+
+**Concepts learned/reinforced:**
+- `serializer.save()` returns the saved model instance
+- Django choices pattern on StatusChange: `status_choices` is a class attribute, not a DB field — don't include it in serializer fields
+- SRP reasoning for extracting helper functions (view handles request/response, helper handles StatusChange creation)
+- Migration option 2 ("Ignore for now") when schema change is safe because data migration already ran
+
+**Decisions made:**
+- FastAPI handles status updates (check-in endpoint) — high volume, low latency use case
+- Redis caches dashboard summary counts
+- Celery fires async task on status change
+- Keep function-based views for now — refactor to class-based after MVP
+
+**What's next:**
+- Clean up print statements in views.py (lines 13, 31, 33)
+- Build remaining DRF views: registrant_list, registrant_detail, update_status, dashboard_summary
+- Wire up URLs
+- Tests for each view
+- Then: FastAPI service

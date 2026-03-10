@@ -14,4 +14,4 @@ class RegistrantSerializer(serializers.ModelSerializer):
 class StatusChangeSerializer(serializers.ModelSerializer):
     class Meta:
         model = StatusChange
-        fields = ['id', 'status_choices', 'registrant', 'status', 'date_time']
+        fields = ['id', 'registrant', 'status', 'date_time']
