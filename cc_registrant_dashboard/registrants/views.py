@@ -27,13 +27,12 @@ def create_registrant(request):
     serializer = RegistrantSerializer(data=request.data)
 
     if serializer.is_valid():
-        #add status_update_changer 
         status1 = serializer.save()
-        print(type(status1))
         status_update_creator(status1)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
   
+
 
 @api_view(['GET'])
 def registrant_list(request, event_id=1):
@@ -43,5 +42,16 @@ def registrant_list(request, event_id=1):
     registrants = Registrant.objects.filter(event=event_id)
     serializer = RegistrantSerializer(registrants, many=True)
     return Response(serializer.data)
-    
+  
 
+@api_view(['GET'])
+def registrant_detail(request,event_id=1, registrant_id=1):
+    """
+    Get single registrants
+    """
+    registrant = Registrant.objects.filter(event=event_id).get(pk=registrant_id)
+    serializer = RegistrantSerializer(registrant, many=False)
+    return Response(serializer.data)
+    print(registrant_id)
+
+  # event_id=1,
