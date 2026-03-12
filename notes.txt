@@ -1,1 +1,3 @@
-Added helper function to post registrant view
+update_status — PATCH registrant status + create StatusChange
+dashboard_summary — GET counts by status
+

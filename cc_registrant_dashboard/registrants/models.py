@@ -23,7 +23,7 @@ class Registrant(models.Model):
     CREW = 'CRW'
     VIP = 'VIP'
     ARTIST = 'ART'
-    
+     
     REGISTRANT_TYPE_CHOICES = {
         STANDARD: "Standard",
     }

@@ -346,3 +346,27 @@ Phase 1: Project Setup & Core Models
 - Wire up URLs
 - Tests for each view
 - Then: FastAPI service
+
+### Session 9 — 2026-03-12
+**Topic:** update_status PATCH view, VSCode theme customisation
+
+**What happened:**
+- registrant_list and registrant_detail views already complete from previous session
+- Working through building the update_status PATCH view
+- Discussed PATCH vs PUT: PATCH = partial update (only send what changes), PUT = full replacement
+- Discussed `partial=True` on serializer: prevents validation failure when not sending all required fields
+- Confirmed function signature: `update_status(request, registrant_id)` — event_id not needed, registrant has a unique ID
+- The new status value comes from the request body, not the URL
+- VSCode theme changed to Atom Material Theme; customised editor background (#232e33) to match sidebar, flattened section headers and activity bar to match
+
+**Concepts covered:**
+- PATCH: partial update — only include fields that change
+- `serializer = RegistrantSerializer(instance, data=request.data, partial=True)` — three arguments: instance, incoming data, partial flag
+- Registrant ID is globally unique — no need to scope by event_id to fetch it
+
+**What's next:**
+- Tom finishes writing update_status view
+- dashboard_summary view (counts by status per event)
+- Wire up all URLs
+- Tests for each view
+- FastAPI check-in endpoint
