@@ -47,12 +47,17 @@ def registrant_detail(request,event_id, registrant_id):
     Get single registrants
     """
     registrant = Registrant.objects.filter(event=event_id).get(pk=registrant_id)
-    serializer = RegistrantSerializer(registrant, many=False)
+    serializer = RegistrantSerializer(registrant)
     return Response(serializer.data)
   
 @api_view(['PATCH'])
-def update_status(request):
-    print("hello")
+def update_status(request, registrant_id):
+    print(request.data)
+    deserialized = RegistrantSerializer()
+    
+    deserialized.update(current_status = request.data["current_status"])
+    print(deserialized)
+
     return Response({"message": "hello"})
     
     
