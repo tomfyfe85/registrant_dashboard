@@ -364,9 +364,22 @@ Phase 1: Project Setup & Core Models
 - `serializer = RegistrantSerializer(instance, data=request.data, partial=True)` — three arguments: instance, incoming data, partial flag
 - Registrant ID is globally unique — no need to scope by event_id to fetch it
 
+**Progress continued:**
+- Got update_status skeleton running (prints hello, returns Response) — confirmed URL routing works
+- Learned: all views need a return statement; Response expects serializable data (dict, list, string)
+- Discussed PATCH vs PUT in detail — PATCH sends only changed fields, PUT replaces the whole resource
+- Discussed why serializer is useful in PATCH even though you could do it manually — validation of choices field
+- Two options presented: A) with serializer (validation) B) without (simpler, direct assignment) — to be decided next session
+- Reviewed registrant_detail — confirmed it's correct; noted .get() will raise DoesNotExist without try/except (fine for MVP)
+- Added full Views section to DJANGO_DRF_COURSE.md: @api_view, request/response objects, CRUD patterns, PATCH vs PUT, URL params
+- VSCode theme exploration: Kanagawa Wave (#1F1F28 — editor and sidebar same colour natively)
+
 **What's next:**
-- Tom finishes writing update_status view
+- Decide: serializer or direct assignment for update_status
+- Add registrant_id to update_status URL and function signature
+- Fetch registrant from DB, pass to serializer with partial=True (or direct assignment), validate, save
+- Call status_update_creator after save
 - dashboard_summary view (counts by status per event)
-- Wire up all URLs
+- Wire up remaining URLs (registrant_list)
 - Tests for each view
 - FastAPI check-in endpoint

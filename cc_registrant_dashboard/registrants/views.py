@@ -42,11 +42,11 @@ def registrant_list(request, event_id=1):
     return Response(serializer.data)
 
 @api_view(['GET'])
-def registrant_detail(request,event_id, registrant_id):
+def registrant_detail(request,registrant_id):
     """
     Get single registrants
     """
-    registrant = Registrant.objects.filter(event=event_id).get(pk=registrant_id)
+    registrant = Registrant.objects.get(pk=registrant_id)
     serializer = RegistrantSerializer(registrant)
     return Response(serializer.data)
   
@@ -55,7 +55,7 @@ def update_status(request, registrant_id):
     print(request.data)
     deserialized = RegistrantSerializer()
     
-    deserialized.update(current_status = request.data["current_status"])
+    deserialized.update(CurrentStatus[request.data["current_status"]])
     print(deserialized)
 
     return Response({"message": "hello"})

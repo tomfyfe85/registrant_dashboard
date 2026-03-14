@@ -8,7 +8,7 @@ Each concept includes: theory, examples, and implementation options.
 
 ## Table of Contents
 1. [Serializers](#serializers)
-2. [Views & ViewSets](#views--viewsets) (Coming soon)
+2. [Views & ViewSets](#views--viewsets)
 3. [Authentication & Permissions](#authentication--permissions) (Coming soon)
 4. [Advanced Topics](#advanced-topics) (Coming soon)
 
@@ -149,7 +149,166 @@ Once you understand serializers, you'll learn:
 
 ---
 
-*Last updated: 2026-02-22*
+*Last updated: 2026-03-12*
+
+---
+
+## Views & ViewSets
+
+Views
+=====
+
+CONCEPT: What Is It?
+--------------------
+A view is the function (or class) that handles an HTTP request and returns an HTTP response.
+
+When a request comes in:
+1. Django checks the URL patterns in `urls.py`
+2. Finds the matching view function
+3. Calls it with the request object (and any URL parameters)
+4. The view does its work and returns a Response
+
+WHY IT EXISTS:
+- The view is where your business logic lives
+- It's the bridge between the URL (what the client asked for) and the data (what the DB has)
+
+HOW IT WORKS (function-based view with DRF):
+```
+Client sends HTTP request
+    ↓
+urls.py matches the URL → calls the view function
+    ↓
+@api_view decorator checks the HTTP method is allowed
+    ↓
+View fetches data, runs logic, uses a serializer
+    ↓
+Returns a DRF Response (serialized data + status code)
+    ↓
+Client receives JSON
+```
+
+KEY INSIGHT:
+The URL says *what resource*. The HTTP method says *what action*.
+One URL can handle multiple actions (GET, POST, PATCH) — the view decides what to do based on `request.method`.
+
+---
+
+### @api_view Decorator
+
+```python
+@api_view(['GET', 'POST'])
+def my_view(request):
+    ...
+```
+
+- Wraps a plain function in DRF's request/response handling
+- Whitelist of allowed methods — returns `405 Method Not Allowed` for anything else
+- Gives you `request.data` (parsed request body) instead of `request.body`
+- Gives you DRF's `Response` instead of Django's `JsonResponse`
+
+Without `@api_view`, you'd have to parse JSON manually, handle content negotiation yourself, and lose the browsable API.
+
+---
+
+### The Request Object
+
+DRF's `request` wraps Django's `HttpRequest` and adds:
+
+| Attribute | What it is |
+|---|---|
+| `request.data` | Parsed request body (JSON, form data — works for POST, PUT, PATCH) |
+| `request.query_params` | URL query string parameters (e.g. `?status=CHK`) |
+| `request.method` | The HTTP method as a string (`'GET'`, `'POST'`, etc.) |
+| `request.user` | The authenticated user (or AnonymousUser) |
+
+---
+
+### The Response Object
+
+```python
+return Response(data, status=status.HTTP_200_OK)
+```
+
+- `data`: anything serializable (dict, list, string, None)
+- `status`: HTTP status code — use DRF's constants (`status.HTTP_201_CREATED`) not raw integers
+- DRF handles content negotiation — if the client wants JSON, it gets JSON
+
+Common status codes:
+| Code | Constant | When to use |
+|---|---|---|
+| 200 | `HTTP_200_OK` | Successful GET or PATCH |
+| 201 | `HTTP_201_CREATED` | Successful POST (resource created) |
+| 204 | `HTTP_204_NO_CONTENT` | Successful DELETE (nothing to return) |
+| 400 | `HTTP_400_BAD_REQUEST` | Validation failed |
+| 404 | `HTTP_404_NOT_FOUND` | Resource not found |
+
+---
+
+### The Standard CRUD Pattern
+
+Every view follows the same skeleton:
+
+**GET (read one):**
+```python
+@api_view(['GET'])
+def registrant_detail(request, registrant_id):
+    registrant = Registrant.objects.get(pk=registrant_id)
+    serializer = RegistrantSerializer(registrant)
+    return Response(serializer.data)
+```
+
+**POST (create):**
+```python
+@api_view(['POST'])
+def create_registrant(request):
+    serializer = RegistrantSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+```
+
+**PATCH (partial update):**
+```python
+@api_view(['PATCH'])
+def update_status(request, registrant_id):
+    registrant = Registrant.objects.get(pk=registrant_id)
+    serializer = RegistrantSerializer(registrant, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+```
+
+Notice the pattern for PATCH: you pass the **instance** as the first argument. This tells the serializer "update this existing object" rather than creating a new one. `partial=True` means fields not included in the request body are left unchanged.
+
+---
+
+### PATCH vs PUT
+
+| | PUT | PATCH |
+|---|---|---|
+| Sends | All fields | Only the fields that change |
+| Missing fields | Reset to default/null | Left unchanged |
+| Use when | Replacing a whole resource | Updating one or two fields |
+
+In practice, PATCH is almost always what you want for update endpoints.
+
+---
+
+### URL Parameters
+
+URL parameters are passed directly as function arguments:
+
+```python
+# urls.py
+path('registrants/<int:registrant_id>/status/', views.update_status)
+
+# views.py
+def update_status(request, registrant_id):  # registrant_id comes from the URL
+```
+
+The name in `<int:registrant_id>` must match the parameter name in the function signature exactly.
 
 ---
 
