@@ -6,7 +6,7 @@ from .serializers import EventSerializer, RegistrantSerializer, StatusChangeSeri
 from .models import Event, StatusChange, Registrant
 
 # Event
-@api_view(["GET"])
+@api_view(["GET"]) 
 def event_list(request):
     """
     List all events
@@ -35,7 +35,7 @@ def create_registrant(request):
 @api_view(['GET'])
 def registrant_list(request, event_id=1):
     """
-    Get all registrants
+    Get all registrants for a specific event
     """
     registrants = Registrant.objects.filter(event=event_id)
     serializer = RegistrantSerializer(registrants, many=True)
@@ -51,24 +51,16 @@ def registrant_detail(request,registrant_id):
     return Response(serializer.data)
   
 @api_view(['PATCH'])
-def update_status(request, registrant_id):
-    print(request.data)
-    deserialized = RegistrantSerializer()
-    
-    deserialized.update(CurrentStatus[request.data["current_status"]])
-    print(deserialized)
-
-    return Response({"message": "hello"})
-    
-    
-    
-    
-    # registrant = Registrant.objects.filter(event=event_id).get(pk=registrant_id)
-    # print(type(registrant))
-    # print(registrant)
-    # if (registrant):
-    #    updated = registrant.update(current_status=request.data)
-    #    status_update_creator(updated)
-    #    updated.save()
-
-  
+def update_registrant(request, registrant_id):
+    # todo
+    # any registrant field can be updated, inc status and event
+    #status will be automatic updated here
+    registrant = Registrant.objects.get(pk=registrant_id)
+    serialized = RegistrantSerializer(registrant, request.data, partial=True)
+    if serializer.is_valid():
+        status1 = serializer.save()
+        status_update_creator(status1)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+      
+        6
