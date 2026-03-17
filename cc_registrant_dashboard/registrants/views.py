@@ -44,8 +44,8 @@ def registrant_list(request, event_id=1):
 @api_view(['GET'])
 def registrant_detail(request,registrant_id):
     """
-    Get single registrants
-    """
+    Get single registrant 
+   """
     registrant = Registrant.objects.get(pk=registrant_id)
     serializer = RegistrantSerializer(registrant)
     return Response(serializer.data)
@@ -57,10 +57,27 @@ def update_registrant(request, registrant_id):
     #status will be automatic updated here
     registrant = Registrant.objects.get(pk=registrant_id)
     serialized = RegistrantSerializer(registrant, request.data, partial=True)
-    if serializer.is_valid():
-        status1 = serializer.save()
+    if serialized.is_valid():
+        status1 = serialized.save()
         status_update_creator(status1)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-      
-        6
+        return Response(serialized.data, status=status.HTTP_200_UPDATED)
+    return Response(serialized.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+def delete_registrant(request, registrant_id):
+    """
+    Delete a registrant
+    """
+    try:
+        registrant = Registrant.objects.get(pk=registrant_id)
+    except Registrant.DoesNotExist:
+        return Response({"error": "Item not found"}, status=status.HTTP_404_NOT_FOUND)    
+    
+    registrant.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+  
+    
+    
+
+  
+    

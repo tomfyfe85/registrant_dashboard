@@ -20,15 +20,12 @@ from registrants import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    
-    path('registrants/<int:registrant_id>',
-         views.update_status),
-    
     path('registrants/events', views.event_list),
+    path('registrants/list', views.registrant_list),
     path('registrants/create', views.create_registrant),
-    path('registrants/registrant_id/<int:registrant_id>',
-         views.registrant_detail),
-    
+    path('registrants/<int:registrant_id>',
+          views.registrant_detail),
+    path('registrants/update/<int:registrant_id>', views.update_registrant),
+    path('registrants/delete', views.delete_registrant)
     ]
 
-# event_id/<int:event_id>/
