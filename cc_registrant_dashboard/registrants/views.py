@@ -33,7 +33,7 @@ def create_registrant(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
   
 @api_view(['GET'])
-def registrant_list(request, event_id=1):
+def registrant_list(request, event_id):
     """
     Get all registrants for a specific event
     """
@@ -60,7 +60,7 @@ def update_registrant(request, registrant_id):
     if serialized.is_valid():
         status1 = serialized.save()
         status_update_creator(status1)
-        return Response(serialized.data, status=status.HTTP_200_UPDATED)
+        return Response(serialized.data, status=status.HTTP_204_NO_CONTENT)
     return Response(serialized.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['DELETE'])
@@ -80,4 +80,4 @@ def delete_registrant(request, registrant_id):
     
 
   
-    
+   

@@ -383,3 +383,34 @@ Phase 1: Project Setup & Core Models
 - Wire up remaining URLs (registrant_list)
 - Tests for each view
 - FastAPI check-in endpoint
+
+### Session 10 — 2026-03-17
+**Topic:** Completing DRF views, URL routing, architecture clarification
+
+**What happened:**
+- Renamed update_status to update_registrant — general PATCH for any registrant field (organiser use)
+- FastAPI will own the check-in status update endpoint (high frequency, real-time)
+- Both write to the same DB, different use cases
+- Completed update_registrant: fetches registrant by ID, passes to RegistrantSerializer with data=request.data, partial=True, validates, saves, calls status_update_creator, returns 200
+- Completed delete_registrant: try/except for DoesNotExist, returns 204 No Content
+- Removed event_id from registrant_detail — registrant_id is globally unique, no need to scope by event
+- Wired up all URLs, resolved trailing slash issue, confirmed all endpoints work in Postman
+- Discussed PATCH vs PUT: PATCH sends only changed fields, can send multiple fields, partial=True handles validation
+- Discussed serialization direction: incoming data (POST/PATCH) = deserialization, outgoing (GET) = serialization
+
+**Concepts learned/reinforced:**
+- PATCH with partial=True — send any subset of fields, serializer only validates what's sent
+- DELETE pattern: try/except DoesNotExist → 404, else delete → 204
+- 204 No Content — correct status for successful delete (no body returned)
+- Trailing slash convention in Django URLs
+- Registrant ID is globally unique — event_id not needed to scope a lookup
+
+**Decisions made:**
+- Tests deferred — will come back and make views robust later
+- dashboard_summary view deferred for now
+- FastAPI is next
+
+**What's next:**
+- FastAPI check-in endpoint: receives registrant_id + new status, updates DB directly
+- Redis caching of dashboard summary
+- Celery async task on status change
