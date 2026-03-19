@@ -41,7 +41,7 @@ def registrant_list(request, event_id):
     serializer = RegistrantSerializer(registrants, many=True)
     return Response(serializer.data)
 
-@api_view(['GET'])
+@api_view(['GET']) 
 def registrant_detail(request,registrant_id):
     """
     Get single registrant 
@@ -52,9 +52,6 @@ def registrant_detail(request,registrant_id):
   
 @api_view(['PATCH'])
 def update_registrant(request, registrant_id):
-    # todo
-    # any registrant field can be updated, inc status and event
-    #status will be automatic updated here
     registrant = Registrant.objects.get(pk=registrant_id)
     serialized = RegistrantSerializer(registrant, request.data, partial=True)
     if serialized.is_valid():
@@ -76,8 +73,4 @@ def delete_registrant(request, registrant_id):
     registrant.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
   
-    
-    
-
   
-   

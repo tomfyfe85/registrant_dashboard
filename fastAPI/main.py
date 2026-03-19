@@ -8,4 +8,5 @@ class StatusUpdate(BaseModel):
 
 @app.patch("/registrant/registrant_id/{registrant_id}")
 async def update_status(registrant_id: int, status_update: StatusUpdate):
+    print(status_update)
     return {"test": "Hello World"}

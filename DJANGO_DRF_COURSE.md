@@ -1,4 +1,5 @@
 # Django REST Framework Course - TaxConductor Edition
+
 =====================================================
 
 A textbook-style reference guide built alongside the TaxConductor project.
@@ -7,6 +8,7 @@ Each concept includes: theory, examples, and implementation options.
 ---
 
 ## Table of Contents
+
 1. [Serializers](#serializers)
 2. [Views & ViewSets](#views--viewsets)
 3. [Authentication & Permissions](#authentication--permissions) (Coming soon)
@@ -20,9 +22,11 @@ Each concept includes: theory, examples, and implementation options.
 
 **Definition:**
 A serializer is a translator between two languages:
+
 - **Python objects** (Django models, QuerySets, dictionaries) ↔ **JSON** (or XML, or other formats)
 
 Think of it like an interpreter at the UN:
+
 - When data comes IN (client → server): JSON → Python objects (deserialization)
 - When data goes OUT (server → client): Python objects → JSON (serialization)
 
@@ -37,11 +41,13 @@ return JsonResponse(transactions, safe=False)
 ```
 
 You had to:
+
 1. Call `.values()` to convert QuerySet → dictionaries
 2. Wrap it in `list()` to make it JSON-serializable
 3. Use `JsonResponse` to convert to JSON
 
 **What's missing?**
+
 - ❌ No validation when creating/updating data
 - ❌ Manual handling of relationships (ForeignKeys)
 - ❌ No customization of which fields to show/hide
@@ -57,6 +63,7 @@ Serializers do ALL of this in one reusable class.
 **Two Main Jobs:**
 
 #### 1. SERIALIZATION (Python → JSON)
+
 ```
 Django Model Object
     ↓
@@ -70,6 +77,7 @@ Client receives JSON
 ```
 
 #### 2. DESERIALIZATION (JSON → Python)
+
 ```
 Client sends JSON
     ↓
@@ -86,11 +94,13 @@ If invalid: returns errors
 Think of a serializer like a factory that makes and unpacks boxes:
 
 **Packing (Serialization):**
+
 - Input: A real product (Django model)
 - Process: Put it in a box with a label (JSON structure)
 - Output: Shipping-ready package (JSON response)
 
 **Unpacking (Deserialization):**
+
 - Input: A box arrives (JSON from client)
 - Quality Control: Check contents are correct (validation)
 - If pass: Unpack and put on shelf (save to database)
@@ -99,16 +109,19 @@ Think of a serializer like a factory that makes and unpacks boxes:
 ### Types of Serializers
 
 **1. Serializer (base class)**
+
 - You define every field manually
 - Full control, but verbose
 - Use when: custom data structures that don't match a model
 
 **2. ModelSerializer (most common)**
+
 - Automatically generates fields from a Django model
 - Less code, follows DRY principle
 - Use when: your API closely matches your database model
 
 **3. HyperlinkedModelSerializer**
+
 - Like ModelSerializer but uses URLs instead of IDs for relationships
 - More RESTful, better for browseable APIs
 - Use when: you want clients to navigate your API through links
@@ -119,6 +132,7 @@ Think of a serializer like a factory that makes and unpacks boxes:
 
 **Fields:**
 Each serializer has fields (like Django model fields):
+
 - `CharField`, `IntegerField`, `DecimalField`, etc.
 - Each field knows how to:
   - Read from a Python object
@@ -127,11 +141,13 @@ Each serializer has fields (like Django model fields):
 
 **Validation:**
 Serializers validate data in THREE layers:
+
 1. **Field-level:** Each field checks its own type (e.g., is this really a decimal?)
 2. **Custom field validation:** `validate_<field_name>()` methods
 3. **Object-level:** `validate()` method checks relationships between fields
 
 **Read-only vs Write-only:**
+
 - `read_only=True`: Show in responses, but ignore if client sends it
   - Example: `id`, `created_at` (we generate these, client can't set them)
 - `write_only=True`: Accept from client, but don't show in responses
@@ -142,6 +158,7 @@ Serializers validate data in THREE layers:
 ### Coming Up Next
 
 Once you understand serializers, you'll learn:
+
 - **Views with serializers:** How to use serializers in your view functions
 - **Generic views:** DRF's pre-built views that handle common patterns
 - **ViewSets:** Even more powerful - one class handles all CRUD operations
@@ -149,30 +166,32 @@ Once you understand serializers, you'll learn:
 
 ---
 
-*Last updated: 2026-03-12*
+_Last updated: 2026-03-12_
 
 ---
 
 ## Views & ViewSets
 
-Views
-=====
+# Views
 
-CONCEPT: What Is It?
---------------------
+## CONCEPT: What Is It?
+
 A view is the function (or class) that handles an HTTP request and returns an HTTP response.
 
 When a request comes in:
+
 1. Django checks the URL patterns in `urls.py`
 2. Finds the matching view function
 3. Calls it with the request object (and any URL parameters)
 4. The view does its work and returns a Response
 
 WHY IT EXISTS:
+
 - The view is where your business logic lives
 - It's the bridge between the URL (what the client asked for) and the data (what the DB has)
 
 HOW IT WORKS (function-based view with DRF):
+
 ```
 Client sends HTTP request
     ↓
@@ -188,7 +207,7 @@ Client receives JSON
 ```
 
 KEY INSIGHT:
-The URL says *what resource*. The HTTP method says *what action*.
+The URL says _what resource_. The HTTP method says _what action_.
 One URL can handle multiple actions (GET, POST, PATCH) — the view decides what to do based on `request.method`.
 
 ---
@@ -214,12 +233,12 @@ Without `@api_view`, you'd have to parse JSON manually, handle content negotiati
 
 DRF's `request` wraps Django's `HttpRequest` and adds:
 
-| Attribute | What it is |
-|---|---|
-| `request.data` | Parsed request body (JSON, form data — works for POST, PUT, PATCH) |
-| `request.query_params` | URL query string parameters (e.g. `?status=CHK`) |
-| `request.method` | The HTTP method as a string (`'GET'`, `'POST'`, etc.) |
-| `request.user` | The authenticated user (or AnonymousUser) |
+| Attribute              | What it is                                                         |
+| ---------------------- | ------------------------------------------------------------------ |
+| `request.data`         | Parsed request body (JSON, form data — works for POST, PUT, PATCH) |
+| `request.query_params` | URL query string parameters (e.g. `?status=CHK`)                   |
+| `request.method`       | The HTTP method as a string (`'GET'`, `'POST'`, etc.)              |
+| `request.user`         | The authenticated user (or AnonymousUser)                          |
 
 ---
 
@@ -249,6 +268,7 @@ Common status codes:
 Every view follows the same skeleton:
 
 **GET (read one):**
+
 ```python
 @api_view(['GET'])
 def registrant_detail(request, registrant_id):
@@ -258,6 +278,7 @@ def registrant_detail(request, registrant_id):
 ```
 
 **POST (create):**
+
 ```python
 @api_view(['POST'])
 def create_registrant(request):
@@ -269,6 +290,7 @@ def create_registrant(request):
 ```
 
 **PATCH (partial update):**
+
 ```python
 @api_view(['PATCH'])
 def update_status(request, registrant_id):
@@ -286,11 +308,11 @@ Notice the pattern for PATCH: you pass the **instance** as the first argument. T
 
 ### PATCH vs PUT
 
-| | PUT | PATCH |
-|---|---|---|
-| Sends | All fields | Only the fields that change |
-| Missing fields | Reset to default/null | Left unchanged |
-| Use when | Replacing a whole resource | Updating one or two fields |
+|                | PUT                        | PATCH                       |
+| -------------- | -------------------------- | --------------------------- |
+| Sends          | All fields                 | Only the fields that change |
+| Missing fields | Reset to default/null      | Left unchanged              |
+| Use when       | Replacing a whole resource | Updating one or two fields  |
 
 In practice, PATCH is almost always what you want for update endpoints.
 
@@ -314,27 +336,29 @@ The name in `<int:registrant_id>` must match the parameter name in the function 
 
 ## Data Migrations
 
-Data Migrations
-===============
+# Data Migrations
 
-CONCEPT: What Is It?
---------------------
-A data migration is a Django migration that doesn't just change the *structure*
-of the database (schema) — it also transforms the *data inside it*.
+## CONCEPT: What Is It?
+
+A data migration is a Django migration that doesn't just change the _structure_
+of the database (schema) — it also transforms the _data inside it_.
 
 Django has two types of migrations:
+
 - **Schema migrations** — add/remove/alter columns and tables (auto-generated)
 - **Data migrations** — run Python code to manipulate data (written by you)
 
 WHY IT EXISTS:
+
 - Sometimes you need to change how data is stored, not just its structure
 - Simply altering a column type can destroy existing data
 - Data migrations let you transform data safely before or after schema changes
 
 HOW IT WORKS (safe approach for changing a CharField to a ForeignKey):
+
 - Step 1: Add the new ForeignKey column as NULLABLE (existing rows unaffected)
 - Step 2: Write a data migration — loop through existing rows, create the
-          related objects, and populate the new column
+  related objects, and populate the new column
 - Step 3: Make the column non-nullable (now all rows have valid FK values)
 - Step 4: Drop the old CharField
 
@@ -345,6 +369,7 @@ Never try to change a column's type and migrate existing data in one step.
 Always separate "add the new structure" from "move the data" from "remove the old structure".
 
 MAIN USE CASES:
+
 1. Changing a CharField to a ForeignKey (extracting a lookup table)
 2. Splitting one column into two
 3. Populating a new column based on logic from other columns
@@ -355,15 +380,19 @@ MAIN USE CASES:
 ### The Multi-Step Pattern (CharField → ForeignKey)
 
 **The wrong way (one step):**
+
 ```
 CharField("Google") → ForeignKey(company_id=1)
 ```
+
 Django tries to cast "Google" to an integer. Fails immediately.
 
 **The right way (three steps):**
 
 #### Step 1 — Add nullable ForeignKey (schema migration)
+
 In `models.py`, add the new field alongside the old one:
+
 ```python
 company = models.CharField(max_length=255)           # old — keep for now
 company_fk = models.ForeignKey(                      # new — nullable
@@ -373,15 +402,19 @@ company_fk = models.ForeignKey(                      # new — nullable
     blank=True
 )
 ```
+
 Run `makemigrations`. Existing rows get `company_fk = NULL`. Nothing breaks.
 
 #### Step 2 — Data migration (populate the new column)
+
 Create an empty migration:
+
 ```bash
 python manage.py makemigrations --empty registrants --name populate_company_fk
 ```
 
 Then write the `RunPython` function:
+
 ```python
 from django.db import migrations
 
@@ -410,14 +443,17 @@ class Migration(migrations.Migration):
 ```
 
 **Note:** Inside data migrations, always use `apps.get_model()` — never import
-models directly. This gives you the model as it was at *that point in history*,
+models directly. This gives you the model as it was at _that point in history_,
 not its current state. This prevents subtle bugs when the model changes later.
 
 #### Step 3 — Remove old field, make new one non-nullable (schema migration)
+
 In `models.py`:
+
 ```python
 company = models.ForeignKey(Company, on_delete=models.PROTECT)  # renamed, non-nullable
 ```
+
 Remove the old `company` CharField. Run `makemigrations`. Django now makes
 `company_fk` non-nullable since all rows have been populated.
 
@@ -425,9 +461,73 @@ Remove the old `company` CharField. Run `makemigrations`. Django now makes
 
 ### Interview Answer Template
 
-*"We needed to extract a CharField into a proper lookup table with a ForeignKey.
+_"We needed to extract a CharField into a proper lookup table with a ForeignKey.
 Rather than do it in one migration — which would fail trying to cast strings to
 integers — we split it into three steps: first add the nullable ForeignKey
 column, then write a data migration using RunPython to create the Company records
 and backfill the new column, then drop the old column and make the FK non-nullable.
-The database was never in a broken state, and the migration was fully reversible."*
+The database was never in a broken state, and the migration was fully reversible."_
+
+---
+
+## Interview Questions
+
+### Serializers
+
+**Q: What is a serializer and why does Django REST Framework use one?**
+A serializer translates between Python objects (Django models, QuerySets) and JSON. Going out it converts a model instance to JSON; coming in it converts raw JSON to validated Python data ready to save to the DB.
+
+**Q: What is the difference between `Serializer` and `ModelSerializer`?**
+`Serializer` is the base class — you define every field manually. `ModelSerializer` reads your model's field definitions and generates them automatically. `ModelSerializer` is faster to write but `Serializer` gives more control.
+
+**Q: What does `many=True` do on a serializer?**
+Tells the serializer to expect a collection (QuerySet or list) rather than a single object. Without it, passing a QuerySet would fail.
+
+**Q: What does `partial=True` do?**
+Tells the serializer not to require all fields — only validate what's present. Used for PATCH requests where the client only sends the fields they want to update.
+
+**Q: What is the difference between serialization and deserialization?**
+Serialization: Python object → JSON (outgoing, GET responses). Deserialization: JSON → validated Python object (incoming, POST/PATCH requests).
+
+---
+
+### Views
+
+**Q: What does `@api_view` do?**
+A decorator that turns a plain function into a DRF view. It enforces HTTP method restrictions (returns 405 for disallowed methods) and gives you access to DRF's `Request` and `Response` objects.
+
+**Q: What is the difference between DRF's `Response` and Django's `JsonResponse`?**
+`Response` handles content negotiation — it can return JSON, XML, or other formats depending on what the client requests. `JsonResponse` always returns JSON. `Response` also integrates with DRF's renderer/parser pipeline.
+
+**Q: What is the difference between PATCH and PUT?**
+PUT replaces the entire resource — you must send all fields. PATCH is a partial update — you only send the fields you want to change. PATCH is more practical for most real-world update operations.
+
+**Q: What HTTP status codes should a REST API return for common operations?**
+- 200 OK — successful GET or PATCH
+- 201 Created — successful POST
+- 204 No Content — successful DELETE (no body)
+- 400 Bad Request — validation failed
+- 404 Not Found — resource doesn't exist
+- 405 Method Not Allowed — wrong HTTP method
+
+**Q: Why extract a helper function like `status_update_creator` from a view?**
+Single Responsibility Principle — the view handles the request/response cycle, the helper handles a specific piece of business logic. Makes each piece easier to test and reason about independently.
+
+---
+
+### Models & Migrations
+
+**Q: What is the difference between `makemigrations` and `migrate`?**
+`makemigrations` generates the migration file from your model changes. `migrate` applies those migrations to the database. You always run `makemigrations` first, then `migrate`.
+
+**Q: What is a data migration and when would you use one?**
+A migration that runs Python code (via `RunPython`) to transform existing data, not just change the schema. Used when a schema change requires backfilling data — e.g. extracting a CharField into a ForeignKey lookup table.
+
+**Q: Why use `apps.get_model()` inside a data migration instead of importing the model directly?**
+A direct import gives you the model's current state, but a migration needs the model as it was at that point in history. `apps.get_model()` gives you the historical version, preventing subtle bugs if the model changes later.
+
+**Q: What is the difference between `on_delete=CASCADE` and `on_delete=PROTECT`?**
+CASCADE deletes related records when the parent is deleted (e.g. StatusChange records are deleted with their Registrant). PROTECT prevents deletion if related records exist — raises an error, forcing you to handle them first (e.g. can't delete an Event that has Registrants).
+
+**Q: What is `auto_now_add=True` on a DateTimeField?**
+Sets the field to the current datetime when the record is first created, and never updates it after that. Used for `created_at` timestamps. Different from `default=timezone.now` (callable) which also works, or `default=timezone.now()` (with parentheses — wrong, evaluates once at class load time).
