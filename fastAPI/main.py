@@ -18,9 +18,14 @@ async def update_status(registrant_id: int, status_update: StatusUpdate):
         place_holders += str(k) + " = %s, "
         values.append(v)
     
+    print(place_holders, values)
     
+    conn = get_db()
+    cur = conn.cursor()
+    updated_registrant = cur.execute(f"INSERT INTO Resgistrant VALUES ({place_holders[:-2]})" % set(values))
     
-    db = get_db()
-    registrant = db.execute(f"INSERT INTO Resgistrant VALUES ({place_holders})" % values)
-    print(registrant) 
-    return {"test": "Hello World"}
+    conn.commit()
+    cur.close()
+    conn.close()
+    # print(registrant) 
+    return updated_registrant
