@@ -9,21 +9,15 @@ class StatusUpdate(BaseModel):
 
 @app.patch("/registrant/registrant_id/{registrant_id}")
 async def update_status(registrant_id: int, status_update: StatusUpdate):
-    place_holders = ""
-    values = []
-    
-    updates_dict = status_update.current_status.models_dump()
-
-    for k, v in updates_dict.items():
-        place_holders += str(k) + " = %s, "
-        values.append(v)
-    
-    print(place_holders, values)
+      
+    updates_dict = status_update.model_dump()
+    status = updates_dict['current_status'] 
     
     conn = get_db()
     cur = conn.cursor()
-    updated_registrant = cur.execute(f"INSERT INTO Resgistrant VALUES ({place_holders[:-2]})" % set(values))
-    
+    # updated_registrant = cur.execute("UPDATE registrants_registrant SET current_status = %s WHERE id = %s", (status, registrant_id))
+    updated_registrant = cur.execute("UPDATE registrants_registrant (current_status) VALUES(%s) WHERE id = %s", (status, registrant_id))
+
     conn.commit()
     cur.close()
     conn.close()

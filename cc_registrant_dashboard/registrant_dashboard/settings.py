@@ -13,17 +13,19 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 from pathlib import Path
 import environ
 import os
-
+from dotenv import load_dotenv
+load_dotenv()
 env = environ.Env(
+  
     # set casting, default value
     DEBUG=(bool, False)
 )
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
-POSTGRES_USER = env("POSTGRES_USER")
-POSTGRES_PASSWORD = env("POSTGRES_PASSWORD")
-POSTGRES_DB = env("POSTGRES_DB")
+POSTGRES_USER = os.getenv('POSTGRES_USER')
+POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD')
+POSTGRES_DB = os.getenv('POSTGRES_DB')
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
