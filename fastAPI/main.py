@@ -15,11 +15,10 @@ async def update_status(registrant_id: int, status_update: StatusUpdate):
     
     conn = get_db()
     cur = conn.cursor()
-    # updated_registrant = cur.execute("UPDATE registrants_registrant SET current_status = %s WHERE id = %s", (status, registrant_id))
-    updated_registrant = cur.execute("UPDATE registrants_registrant (current_status) VALUES(%s) WHERE id = %s", (status, registrant_id))
-
+    cur.execute("UPDATE registrants_registrant SET current_status = %s WHERE id = %s RETURNING id, current_status", (status, registrant_id))
+    updated_status = cur.fetchone()
     conn.commit()
     cur.close()
     conn.close()
-    # print(registrant) 
-    return updated_registrant
+
+    return f"registrant_id: {updated_status[0]}, updated_status: {updated_status[1]}"
