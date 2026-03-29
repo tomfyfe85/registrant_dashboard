@@ -28,8 +28,7 @@ async def update_status(registrant_id: int, status_update: StatusUpdate):
     cur.execute("UPDATE registrants_registrant SET current_status = %s WHERE id = %s RETURNING *", (status, registrant_id))
     
     row = cur.fetchone()
-    print(row)
-
+    
     conn.commit()
     cur.close()
     conn.close()
@@ -37,4 +36,3 @@ async def update_status(registrant_id: int, status_update: StatusUpdate):
 
     return updated_registrant
     
-    # todo create and return pydantic Registrants models 
