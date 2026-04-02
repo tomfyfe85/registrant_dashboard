@@ -1,4 +1,5 @@
 # CrowdComms Project — Full Roadmap & Course Notes
+
 =====================================================
 
 A reference guide for finishing the registrant dashboard MVP end-to-end.
@@ -53,23 +54,24 @@ LLM (OpenAI/Claude)     ← Answers event questions from embedded data
 
 ### Why Each Piece
 
-| Service   | Why it's here |
-|-----------|---------------|
-| Django    | CRUD, admin panel, migrations, auth — all the management-side features |
-| DRF       | API layer on top of Django — serialization, validation, REST conventions |
-| FastAPI   | Async check-in endpoint — handles volume spikes efficiently |
-| Postgres  | Relational DB — registrants, events, companies, status history |
-| Redis     | Cache dashboard counts so Django doesn't hit DB on every page load |
-| Celery    | Offload slow tasks (badge printing, emails) so check-in isn't blocked |
-| pgvector  | Store embeddings in Postgres — no separate vector DB needed |
-| RAG       | Let organisers ask questions about their event data |
-| AWS       | Host and scale the whole thing in production |
+| Service  | Why it's here                                                            |
+| -------- | ------------------------------------------------------------------------ |
+| Django   | CRUD, admin panel, migrations, auth — all the management-side features   |
+| DRF      | API layer on top of Django — serialization, validation, REST conventions |
+| FastAPI  | Async check-in endpoint — handles volume spikes efficiently              |
+| Postgres | Relational DB — registrants, events, companies, status history           |
+| Redis    | Cache dashboard counts so Django doesn't hit DB on every page load       |
+| Celery   | Offload slow tasks (badge printing, emails) so check-in isn't blocked    |
+| pgvector | Store embeddings in Postgres — no separate vector DB needed              |
+| RAG      | Let organisers ask questions about their event data                      |
+| AWS      | Host and scale the whole thing in production                             |
 
 ---
 
 ## 2. Where You Are Now
 
 ### Done ✅
+
 - Django project scaffolded, `registrants` app created
 - Docker + Postgres running with named volume
 - All models complete and migrated: Event, Company, Registrant, StatusChange
@@ -88,9 +90,11 @@ LLM (OpenAI/Claude)     ← Answers event questions from embedded data
 - `database.py` with `get_db()` connecting to Postgres via psycopg2
 
 ### In Progress 🔄
+
 - FastAPI `update_status` endpoint — needs the SQL query to actually update the DB
 
 ### Still To Do
+
 - FastAPI: execute UPDATE query, close connection, return response
 - Redis: add to Docker, configure cache, use in dashboard_summary view
 - Celery: setup, tasks.py, wire to status changes
@@ -103,6 +107,7 @@ LLM (OpenAI/Claude)     ← Answers event questions from embedded data
 ## 3. FastAPI — Database Connection & Check-in Endpoint
 
 ### Docs
+
 - psycopg2 basic usage: https://www.psycopg.org/docs/usage.html
   - Read: **"Basic module usage"** — focus on `connect()`, cursors, `execute()`, `commit()`
   - Read: **"Passing parameters to SQL queries"** — the `%s` placeholder pattern
@@ -133,6 +138,7 @@ When FastAPI is containerised later, you'd use the Docker service name instead.
 ### What to Build
 
 In `main.py`, your `update_status` endpoint needs to:
+
 1. Call `get_db()` to open a connection
 2. Create a cursor
 3. Execute an UPDATE query using parameterised values (registrant_id and new status)
@@ -168,6 +174,7 @@ committing, the UPDATE runs but gets rolled back when the connection closes.
 ## 4. Redis — Caching
 
 ### Docs
+
 - Django cache framework: https://docs.djangoproject.com/en/stable/topics/cache/
   - Read: **"Setting up the cache"** and **"The low-level cache API"**
   - Focus on: `cache.get()`, `cache.set()`, `cache.delete()`
@@ -180,6 +187,7 @@ Redis is an in-memory data store. It holds data in RAM instead of on disk — re
 writes are microseconds vs milliseconds for a DB query.
 
 In this project Redis does two jobs:
+
 1. **Cache** — stores the dashboard summary counts so Django doesn't query Postgres every time
 2. **Message broker** — Celery uses it to pass task messages to workers
 
@@ -203,6 +211,7 @@ The django-redis README shows the exact configuration format.
 ### The Cache Pattern
 
 The `dashboard_summary` view should:
+
 1. Build a cache key specific to the event (e.g. `dashboard_summary_{event_id}`)
 2. Try `cache.get(key)` — if it returns something, return it immediately
 3. If nothing cached (cache miss): run the DB query, build the result
@@ -214,6 +223,7 @@ This is the standard cache-aside pattern. Learn it — you'll use it everywhere.
 ### Cache Invalidation
 
 When a status changes, the cached count is stale. Options:
+
 1. **Short TTL** — cache expires every 30 seconds, eventually consistent (fine for MVP)
 2. **Explicit invalidation** — `cache.delete(key)` on every status change (more correct)
 
@@ -242,6 +252,7 @@ It acts as Celery's message broker — Celery workers listen on Redis queues and
 ## 5. Celery — Async Task Queue
 
 ### Docs
+
 - First steps with Celery: https://docs.celeryq.dev/en/stable/getting-started/first-steps-with-celery.html
 - Django integration: https://docs.celeryq.dev/en/stable/django/first-steps-with-django.html
   - Read both pages in full — they're short and the setup has a specific structure
@@ -257,11 +268,13 @@ Doing this inside the endpoint means it takes 3 seconds. With Celery, you hand t
 and respond immediately. The worker handles it in the background.
 
 **Three components:**
+
 - **Task** — a Python function decorated with `@shared_task`
 - **Broker** — Redis (carries messages from app to workers)
 - **Worker** — a separate process that listens for tasks and runs them
 
 **The flow:**
+
 ```
 Endpoint receives check-in
         ↓
@@ -309,6 +322,7 @@ and use `self.retry()` inside the task. Flower (a web UI for Celery) lets you mo
 ## 6. pgvector & RAG — AI Layer
 
 ### Docs
+
 - pgvector GitHub: https://github.com/pgvector/pgvector
 - pgvector Python: https://github.com/pgvector/pgvector-python (see Django section)
 - OpenAI Embeddings: https://platform.openai.com/docs/guides/embeddings
@@ -391,6 +405,7 @@ to update, and the LLM stays general-purpose.
 ## 7. AWS Deployment
 
 ### Docs
+
 - AWS Free Tier: https://aws.amazon.com/free/ (use this to keep costs near zero)
 - ECS Getting Started: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/getting-started.html
 - GitHub Actions: https://docs.github.com/en/actions/quickstart
@@ -402,6 +417,7 @@ You push your Docker image to ECR (AWS's container registry), and ECS runs it.
 It handles restarts, scaling, and load balancing.
 
 Key terms:
+
 - **Task Definition** — the recipe (image, CPU, memory, env vars)
 - **Service** — keeps your task running (restarts on crash, scales horizontally)
 - **Cluster** — the collection of services
@@ -409,18 +425,19 @@ Key terms:
 
 ### What Goes Where
 
-| Component      | AWS Service |
-|----------------|-------------|
-| Django/DRF     | ECS (Fargate) |
-| FastAPI        | ECS (Fargate, separate service) |
-| Postgres       | RDS (managed Postgres) |
-| Redis          | ElastiCache (managed Redis) |
-| Static files   | S3 + CloudFront CDN |
-| Secrets        | AWS Secrets Manager |
+| Component    | AWS Service                     |
+| ------------ | ------------------------------- |
+| Django/DRF   | ECS (Fargate)                   |
+| FastAPI      | ECS (Fargate, separate service) |
+| Postgres     | RDS (managed Postgres)          |
+| Redis        | ElastiCache (managed Redis)     |
+| Static files | S3 + CloudFront CDN             |
+| Secrets      | AWS Secrets Manager             |
 
 ### CI/CD with GitHub Actions
 
 Every push to `main` should:
+
 1. Run tests
 2. Build Docker image
 3. Push to ECR
@@ -465,6 +482,7 @@ the server management entirely.
 ## 8. Tests
 
 ### Docs
+
 - pytest-django: https://pytest-django.readthedocs.io/
 - DRF testing: https://www.django-rest-framework.org/api-guide/testing/
   - Focus on: `APIClient`, making requests, asserting status codes and response data
@@ -472,6 +490,7 @@ the server management entirely.
 ### Priority Order
 
 Write these — in this order:
+
 1. `test_registrant_list` — GET returns only registrants for the right event
 2. `test_update_registrant` — PATCH updates the field, returns 200
 3. `test_delete_registrant` — DELETE removes registrant, returns 204
@@ -489,6 +508,7 @@ Use `APIClient` from `rest_framework.test` to make HTTP requests.
 ## 9. Full MVP Checklist
 
 ### Django/DRF ✅
+
 - [x] Event, Company, Registrant, StatusChange models
 - [x] All serializers
 - [x] All CRUD views
@@ -498,6 +518,7 @@ Use `APIClient` from `rest_framework.test` to make HTTP requests.
 - [ ] Tests for all views
 
 ### FastAPI 🔄
+
 - [x] Running on port 8001
 - [x] StatusUpdate Pydantic model
 - [x] database.py with get_db()
@@ -506,24 +527,28 @@ Use `APIClient` from `rest_framework.test` to make HTTP requests.
 - [ ] Fire Celery task on status change
 
 ### Redis
+
 - [ ] Add to docker-compose
 - [ ] Configure Django cache backend
 - [ ] Cache dashboard_summary
 - [ ] Cache invalidation strategy
 
 ### Celery
+
 - [ ] celery.py setup
 - [ ] tasks.py with on_status_change task
 - [ ] Wire to update_registrant and FastAPI endpoint
 - [ ] Confirm worker fires in terminal
 
 ### pgvector & RAG
+
 - [ ] Enable pgvector in Postgres
 - [ ] EventDocument model with VectorField
 - [ ] Embed and store sample documents
 - [ ] ask_event endpoint
 
 ### AWS
+
 - [ ] Dockerfile for Django
 - [ ] Dockerfile for FastAPI
 - [ ] RDS + ElastiCache provisioned
