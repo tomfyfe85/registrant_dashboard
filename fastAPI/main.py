@@ -19,10 +19,8 @@ class Registrant(BaseModel):
 
 @app.patch("/registrant/registrant_id/{registrant_id}")
 async def update_status(registrant_id: int, status_update: StatusUpdate):
-   
-    updates_dict = status_update.model_dump()
-    status = updates_dict['current_status'] 
-   
+
+    status = status_update.current_status 
     conn = get_db()
     cur = conn.cursor(cursor_factory=RealDictCursor)
     cur.execute("UPDATE registrants_registrant SET current_status = %s WHERE id = %s RETURNING *", (status, registrant_id))
