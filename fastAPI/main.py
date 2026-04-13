@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from database import get_db 
 from psycopg2.extras import RealDictCursor
+from cache import add_to_buffer
 
 app = FastAPI()
 
@@ -17,9 +18,15 @@ class Registrant(BaseModel):
     guest_type: str
     current_status: str
 
+
 @app.patch("/registrant/registrant_id/{registrant_id}")
 async def update_status(registrant_id: int, status_update: StatusUpdate):
-
+    status = status_update.current_status 
+    add_to_buffer(registrant_id, status)
+    
+    return {"status": "queued", "registrant_id": registrant_id}
+  
+def write_to_postgres(registrant_id: int, status_update: StatusUpdate):
     status = status_update.current_status 
     conn = get_db()
     cur = conn.cursor(cursor_factory=RealDictCursor)
@@ -31,6 +38,3 @@ async def update_status(registrant_id: int, status_update: StatusUpdate):
     cur.close()
     conn.close()
     updated_registrant = Registrant(**row)
-
-    return updated_registrant
-    
