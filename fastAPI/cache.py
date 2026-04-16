@@ -16,7 +16,7 @@ def add_to_buffer(registrant_id: int, status: str):
     
 def drain_worker(write_function):
     while True:
-      queue_item = r.rpop
-      write_function(queue_item["registrant_id"], queue_item["status"]) 
+      queue_item = r.rpop("status_update_que")
+      status_change_item = json.loads(queue_item)
+      write_function(status_change_item["registrant_id"], status_change_item["status"]) 
       sleep(0.5)
-      

@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from pydantic import BaseModel
 from database import get_db 
@@ -34,7 +36,7 @@ def write_to_postgres(registrant_id: int, status_update: StatusUpdate):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     drain_worker
-    yield
+    yield 
 
 @app.patch("/registrant/registrant_id/{registrant_id}")
 async def update_status(registrant_id: int, status_update: StatusUpdate):
@@ -42,5 +44,6 @@ async def update_status(registrant_id: int, status_update: StatusUpdate):
     add_to_buffer(registrant_id, status)
     return {"status": "queued", "registrant_id": registrant_id}
   
-drain_worker()
+drain_worker(write_to_postgres)
 
+# todo asyncio.create_task
