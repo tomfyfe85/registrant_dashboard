@@ -2,7 +2,7 @@ import redis
 from dotenv import load_dotenv
 import os
 import json
-from time import sleep
+import asyncio
 
 load_dotenv()   
 REDIS_HOST = os.getenv("REDIS_HOST")
@@ -14,9 +14,11 @@ def add_to_buffer(registrant_id: int, status: str):
     r.lpush("status_update_que",json_data)
 
     
-def drain_worker(write_function):
+async def drain_worker(write_function):
     while True:
       queue_item = r.rpop("status_update_que")
+      print(queue_item)
       status_change_item = json.loads(queue_item)
       write_function(status_change_item["registrant_id"], status_change_item["status"]) 
-      sleep(0.5)
+      await asyncio.sleep(0.5)
+    
