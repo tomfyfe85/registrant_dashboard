@@ -48,5 +48,3 @@ async def update_status(registrant_id: int, status_update: StatusUpdate):
     add_to_buffer(registrant_id, status)
     return {"status": "queued", "registrant_id": registrant_id}
  
-
-# todo asyncio.create_task

@@ -17,8 +17,9 @@ def add_to_buffer(registrant_id: int, status: str):
 async def drain_worker(write_function):
     while True:
       queue_item = r.rpop("status_update_que")
-      print(queue_item)
+      if queue_item is None:
+          continue
       status_change_item = json.loads(queue_item)
       write_function(status_change_item["registrant_id"], status_change_item["status"]) 
       await asyncio.sleep(0.5)
-    
+     
