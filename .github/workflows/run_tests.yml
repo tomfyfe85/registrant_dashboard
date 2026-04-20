@@ -47,5 +47,8 @@ jobs:
           POSTGRES_HOST: localhost
           # The default PostgreSQL port
           POSTGRES_PORT: 5432
+          POSTGRES_USER: postgres_reg_dashboard
+          POSTGRES_PASSWORD: 123456
+          POSTGRES_DB: db_reg_dashboard
         # - name: Run Django tests
         run: cd cc_registrant_dashboard && pytest
