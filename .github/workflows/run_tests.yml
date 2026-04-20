@@ -6,6 +6,13 @@ jobs:
   container-job:
     runs-on: ubuntu-latest
 
+    env:
+      DB_NAME: "db_reg_dashboard"
+      DB_USER: "postgres_reg_dashboard"
+      DB_PASSWORD: "123456"
+      DB_HOST: "localhost"
+      DB_PORT: 5432
+
     services:
       postgres:
         image: postgres:15
@@ -13,6 +20,8 @@ jobs:
           POSTGRES_USER: "postgres_reg_dashboard"
           POSTGRES_PASSWORD: "123456"
           POSTGRES_DB: "db_reg_dashboard"
+        ports:
+          - 5432:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
