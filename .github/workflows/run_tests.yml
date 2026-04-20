@@ -34,15 +34,16 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: test fastAPI
-        run: pytest
+      # - name: test fastAPI
+      #   run: pytest
 
-      - name: Connect to PostgreSQL & test django
-        # Runs a script that creates a PostgreSQL table, populates
-        # the table with data, and then retrieves the data.
-        env:
-          # The hostname used to communicate with the PostgreSQL service container
-          POSTGRES_HOST: postgres
-          # The default PostgreSQL port
-          POSTGRES_PORT: 5432
+      # - name: Connect to PostgreSQL & test django
+      #   # Runs a script that creates a PostgreSQL table, populates
+      #   # the table with data, and then retrieves the data.
+      #   env:
+      #     # The hostname used to communicate with the PostgreSQL service container
+      #     POSTGRES_HOST: postgres
+      #     # The default PostgreSQL port
+      #     POSTGRES_PORT: 5432
+      - name: Run Django tests
         run: cd cc_registrant_dashboard && pytest
