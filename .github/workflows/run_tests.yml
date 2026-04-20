@@ -6,23 +6,23 @@ jobs:
   container-job:
     runs-on: ubuntu-latest
 
-    # services:
-    #   postgres:
-    #     image: postgres:15
-    #     env:
-    #       POSTGRES_USER: postgres_reg_dashboard
-    #       POSTGRES_PASSWORD: 123456
-    #       POSTGRES_DB: db_reg_dashboard
-    #     options: >-
-    #       --health-cmd pg_isready
-    #       --health-interval 10s
-    #       --health-timeout 5s
-    #       --health-retries 5
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: "postgres_reg_dashboard"
+          POSTGRES_PASSWORD: 123456
+          POSTGRES_DB: "db_reg_dashboard"
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
-    #   redis:
-    #     image: redis:latest
-    #     env:
-    #       REDIS_HOST: localhost
+      redis:
+        image: redis:latest
+        env:
+          REDIS_HOST: localhost
 
     steps:
       # Downloads a copy of the code in your repository before running CI tests
@@ -37,13 +37,13 @@ jobs:
       # - name: test fastAPI
       #   run: pytest
 
-      # - name: Connect to PostgreSQL & test django
-      #   # Runs a script that creates a PostgreSQL table, populates
-      #   # the table with data, and then retrieves the data.
-      #   env:
-      #     # The hostname used to communicate with the PostgreSQL service container
-      #     POSTGRES_HOST: postgres
-      #     # The default PostgreSQL port
-      #     POSTGRES_PORT: 5432
-      - name: Run Django tests
+      - name: Connect to PostgreSQL & test django
+        # Runs a script that creates a PostgreSQL table, populates
+        # the table with data, and then retrieves the data.
+        env:
+          # The hostname used to communicate with the PostgreSQL service container
+          POSTGRES_HOST: postgres
+          # The default PostgreSQL port
+          POSTGRES_PORT: 5432
+        # - name: Run Django tests
         run: cd cc_registrant_dashboard && pytest
