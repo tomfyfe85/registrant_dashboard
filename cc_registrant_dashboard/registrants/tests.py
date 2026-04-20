@@ -10,3 +10,5 @@ def test_create_registrant():
                                         'company_fk': 1,
                                         'event': test_event1.id}, format='json')
     assert response.status_code == 201
+
+
