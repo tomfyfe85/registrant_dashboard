@@ -22,4 +22,4 @@ async def drain_worker(write_function):
       status_change_item = json.loads(queue_item)
       write_function(status_change_item["registrant_id"], status_change_item["status"]) 
       await asyncio.sleep(0.5)
-     
+    # test
