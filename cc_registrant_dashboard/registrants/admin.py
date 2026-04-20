@@ -7,4 +7,3 @@ admin.site.register(Event)
 admin.site.register(Company)
 admin.site.register(Registrant)
 admin.site.register(StatusChange)
-
