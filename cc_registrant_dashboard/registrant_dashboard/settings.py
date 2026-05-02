@@ -55,6 +55,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'registrants',
     'rest_framework'
+    'daphne',
+    'channels'
 ]
 
 MIDDLEWARE = [
