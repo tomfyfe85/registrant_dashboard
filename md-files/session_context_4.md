@@ -1,21 +1,27 @@
 # Session Context — Redis Buffer Project
 
 ## Who I am
+
 I'm a junior developer trying to get my first full time tech role. I use Python, FastAPI, Django, and PostgreSQL. I'm learning AWS. I want to own my work and understand it — not just copy paste from AI. Treat me like a university lecturer would: point me to docs, ask me questions, don't give me answers directly.
 
 ## The Project
+
 A registration dashboard for events. Registrants check in at events and their status changes (registered → checked_in etc). FastAPI handles the PATCH endpoint. Django polls PostgreSQL every 1 second to update the dashboard.
 
 ## The Problem We're Solving
+
 PostgreSQL has a max connection limit (~100). If 500 people check in simultaneously, 500 connections hit Postgres at once — requests beyond the limit fail. Redis acts as a write buffer to absorb the burst.
 
 ## The Architecture (MVP)
+
 ```
 PATCH /event → FastAPI → Redis (write buffer) → drain worker → PostgreSQL ← Django polls every 1s
 ```
+
 Django does NOT need Redis — it just polls Postgres directly. Redis is a performance/resilience layer for the FastAPI write path only.
 
 ## What's Been Done
+
 - PostgreSQL running in Docker ✅
 - FastAPI PATCH endpoint working ✅
 - Redis running in Docker ✅
@@ -33,6 +39,7 @@ Django does NOT need Redis — it just polls Postgres directly. Redis is a perfo
 - GitHub Actions CI pipeline set up in .github/workflows/ci.yml ✅
 
 ## Key Files
+
 - fastAPI/cache.py — Redis connection + add_to_buffer() + drain_worker()
 - fastAPI/database.py — Postgres connection using psycopg2
 - fastAPI/main.py — FastAPI app, PATCH endpoint, lifespan, write_to_postgres()
@@ -44,6 +51,7 @@ Django does NOT need Redis — it just polls Postgres directly. Redis is a perfo
 - .env — contains DB credentials and REDIS_HOST (not committed to repo)
 
 ## Current ci.yml
+
 ```yaml
 name: run_tests
 run-name: django/fastAPI testing
@@ -83,10 +91,12 @@ jobs:
 ```
 
 ## What's Next
+
 1. Confirm CI pipeline is fully green (Django test passing in GitHub Actions)
 2. WebSockets — replace Django's 1s polling with a persistent WebSocket connection for real time dashboard updates. Django needs Django Channels for WebSocket support.
 
 ## Key Testing Concepts Learned
+
 - TestClient wraps the FastAPI app so you can send requests without running a server
 - @patch("module.function") replaces a function with a mock — mock it where it's used, not where it's defined
 - MagicMock() handles chained calls like conn.cursor().execute() automatically
@@ -97,6 +107,7 @@ jobs:
 - @pytest.mark.django_db required for any Django test that touches the database
 
 ## Key Concepts Learned
+
 - Redis is an in-memory key-value store — RAM based, ~100x faster than Postgres
 - Redis uses lpush to add to a list, rpop to remove — gives FIFO ordering
 - async def makes a function a coroutine — required for asyncio.create_task
@@ -108,6 +119,7 @@ jobs:
 - GitHub Actions service containers need credentials passed explicitly to each step that uses them
 
 ## Teaching Style That Works
+
 - Don't give answers — ask questions and point to docs
 - Let the student figure things out and explain them back
 - Only move forward when they can explain it themselves
