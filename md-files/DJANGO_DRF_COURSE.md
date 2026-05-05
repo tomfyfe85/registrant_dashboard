@@ -14,6 +14,7 @@ Each concept includes: theory, examples, and implementation options.
 3. [Authentication & Permissions](#authentication--permissions) (Coming soon)
 4. [Advanced Topics](#advanced-topics) (Coming soon)
 5. [WebSockets, ASGI, and Django Channels](#websockets-asgi-and-django-channels)
+6. [Patterns & Principles in This Project](#patterns--principles-in-this-project)
 
 ---
 
@@ -678,3 +679,79 @@ No more polling. Updates fan out instantly.
 - ✅ Chat rooms (groups = rooms)
 - ❌ One-off async tasks — use Celery instead
 - ❌ Replacing all your views — WebSockets only for the things that need real-time
+
+---
+
+## Patterns & Principles in This Project
+
+A running log of OOP, SOLID, and Gang of Four design patterns spotted in real code as we build. Useful for revision and interview prep — these are the same concepts the textbooks describe, but encountered in the wild.
+
+Each entry: **what it is**, **where it appeared**, and a short **why it matters**.
+
+---
+
+### 1. Inversion of Control (Hollywood Principle)
+
+**Type:** Architectural pattern — foundational to most framework design (and to most GoF patterns)
+**Spotted in:** Django Channels — `WebsocketConsumer` lifecycle hooks (`connect`, `receive`, `disconnect`)
+
+The framework owns the main loop and *calls into* your code at predefined points. You don't call Channels — Channels calls you. *"Don't call us, we'll call you."*
+
+Same idea shows up in:
+- Django views — Django calls your view function on each request
+- DRF serializer hooks — `validate()`, `create()`, `update()`
+- `unittest.TestCase` — `setUp()`, `tearDown()`
+- React lifecycle / hooks — `useEffect`, `componentDidMount`
+
+**Why it matters:** Once you see IoC, every framework starts to feel less mysterious. They're all variations on "the framework is the engine; you provide the parts that bolt into it."
+
+---
+
+### 2. Polymorphism via Inheritance
+
+**Type:** Core OOP concept (one of the four pillars: encapsulation, inheritance, polymorphism, abstraction)
+**Spotted in:** `ChatConsumer(WebsocketConsumer)` — overriding `connect` / `receive` / `disconnect`
+
+Method overriding via subclassing. The framework holds a reference typed as `WebsocketConsumer`, but when it calls `.connect()`, *your subclass's version runs*. The runtime picks the right method based on the actual object — known as **dynamic dispatch**.
+
+**Why it matters:** This is the mechanism that makes IoC and most GoF patterns possible. Without polymorphism, you couldn't plug your own behaviour into a framework's lifecycle.
+
+---
+
+### 3. Open / Closed Principle — the **O** in SOLID
+
+**Type:** SOLID principle (Bertrand Meyer, formalised by Robert Martin)
+**Spotted in:** `WebsocketConsumer` — extended via subclassing, never modified directly
+
+> *"Software entities should be open for extension, but closed for modification."*
+
+`WebsocketConsumer` is **closed for modification** (you don't edit Channels' source) but **open for extension** (you create a new subclass that adds your behaviour). The base class is stable; new functionality lives in new subclasses.
+
+**Why it matters:** OCP is the *justification* for inheritance hooks. The reason `WebsocketConsumer` exposes `connect`/`receive`/`disconnect` for you to override (rather than asking you to fork Channels) is OCP in action.
+
+---
+
+### 4. Template Method (GoF Behavioural Pattern)
+
+**Type:** Gang of Four — Behavioural pattern
+**Spotted in:** `WebsocketConsumer` — defines the lifecycle skeleton; subclasses fill in the steps
+
+> *"Define the skeleton of an algorithm in an operation, deferring some steps to subclasses. Template Method lets subclasses redefine certain steps of an algorithm without changing the algorithm's structure."*
+
+`WebsocketConsumer` defines the fixed sequence: **handshake → connect → receive loop → disconnect**. The skeleton is fixed; the per-step content is yours to provide.
+
+```
+Connection lifecycle (the "template"):
+    1. handshake               ← framework
+    2. connect()               ← YOUR step
+    3. while messages arrive:
+         receive(text_data)    ← YOUR step
+    4. disconnect(code)        ← YOUR step
+    5. teardown                ← framework
+```
+
+**Why it matters:** Template Method is *one specific way* to implement IoC at the class level. Whenever you see a base class with a clear sequence of methods that subclasses override — Django's `View.dispatch()`, DRF's `GenericAPIView.get_object()` — that's Template Method.
+
+---
+
+*(More patterns will be added as we hit them. Channel layer = pub/sub. Drain worker passing `write_to_postgres` as an argument = dependency injection. Etc.)*
