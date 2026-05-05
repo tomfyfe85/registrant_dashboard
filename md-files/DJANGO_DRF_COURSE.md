@@ -13,6 +13,7 @@ Each concept includes: theory, examples, and implementation options.
 2. [Views & ViewSets](#views--viewsets)
 3. [Authentication & Permissions](#authentication--permissions) (Coming soon)
 4. [Advanced Topics](#advanced-topics) (Coming soon)
+5. [WebSockets, ASGI, and Django Channels](#websockets-asgi-and-django-channels)
 
 ---
 
@@ -531,3 +532,149 @@ CASCADE deletes related records when the parent is deleted (e.g. StatusChange re
 
 **Q: What is `auto_now_add=True` on a DateTimeField?**
 Sets the field to the current datetime when the record is first created, and never updates it after that. Used for `created_at` timestamps. Different from `default=timezone.now` (callable) which also works, or `default=timezone.now()` (with parentheses — wrong, evaluates once at class load time).
+
+---
+
+## WebSockets, ASGI, and Django Channels
+
+This section covers three connected concepts. They build on each other:
+
+1. **WebSockets** — the protocol that lets browser and server keep a connection open and talk both ways
+2. **ASGI** — the Python interface that lets web servers handle WebSockets (and async) instead of plain request/response
+3. **Django Channels** — the library that gives Django ASGI + WebSocket support, plus a "channel layer" so multiple processes can broadcast to connected clients
+
+---
+
+### CONCEPT: What Is a WebSocket?
+
+A WebSocket is a **persistent, two-way communication channel** between browser and server.
+
+Compare to plain HTTP:
+
+- **HTTP**: client asks → server answers → connection closes. Server can't initiate.
+- **WebSocket**: connection opens once → either side can send messages anytime → stays open until explicitly closed.
+
+**Mental model:** HTTP is a phone call where you can only ask one question per call. WebSocket is leaving the line open and chatting freely.
+
+### WHY IT EXISTS
+
+Real-time apps (live dashboards, chat, multiplayer games) need the **server to push** updates to the client when something changes — not wait for the client to ask.
+
+Without WebSockets, the alternatives are:
+
+- **Polling**: client asks "anything new?" every X seconds. Wasteful, has latency. ← *what your dashboard does today*
+- **Long polling**: client asks, server holds the request open until something happens, then responds. Better, but each update still requires a fresh request.
+- **Server-Sent Events (SSE)**: one-way push from server to client. Good for some cases, but you can't send messages from client to server on the same connection.
+- **WebSocket**: bidirectional, low latency, persistent. Best for true real-time.
+
+Your dashboard currently does the worst of these — Django polling Postgres every 1 second. WebSockets remove that polling.
+
+### HOW IT WORKS (the handshake)
+
+1. Client sends an HTTP request with `Upgrade: websocket` header
+2. Server agrees: `101 Switching Protocols`
+3. The same TCP connection stays open
+4. Both sides now send "frames" (messages) at will
+5. Either side closes when done
+
+```
+Client                    Server
+  |---HTTP request------->|   Upgrade: websocket
+  |<---101 Switching------|
+  |=======================|   ← same TCP connection, persistent
+  |<---message------------|
+  |---message------------>|
+  |<---message------------|
+  |---close-------------->|
+```
+
+### KEY INSIGHT
+
+Once the handshake is done, messages are dirt cheap. The mental shift is: instead of *"what should I respond?"*, it's *"what events should I broadcast to whom?"*
+
+### MAIN USE CASES
+
+- ✅ Live dashboards (your case)
+- ✅ Chat / messaging
+- ✅ Multiplayer games
+- ✅ Collaborative editing (Google Docs, Figma)
+- ❌ Standard CRUD apps — REST is fine and simpler
+- ❌ Anything that benefits from HTTP caching (CDNs, browser cache)
+
+---
+
+### CONCEPT: What Is ASGI?
+
+**ASGI = Asynchronous Server Gateway Interface.** The async successor to WSGI.
+
+|                         | WSGI                            | ASGI                              |
+| ----------------------- | ------------------------------- | --------------------------------- |
+| Stands for              | Web Server Gateway Interface    | Asynchronous Server Gateway Interface |
+| Connection model        | Single request → single response | Long-lived connections supported  |
+| Async support           | No                              | Yes                               |
+| Supports WebSockets?    | No                              | Yes                               |
+| Django runs on it?      | Yes (default for years)         | Yes (since Django 3.0)            |
+| Example servers         | `gunicorn`, `uWSGI`             | `daphne`, `uvicorn`               |
+
+### WHY IT EXISTS
+
+WSGI servers were designed for a world where every web interaction was "one request, one response, then done." WebSockets break that model — connections live for minutes or hours.
+
+ASGI defines a richer protocol that handles **HTTP + WebSocket + long-lived connections** in one interface, so a single server can serve both your normal Django views and your WebSocket endpoints.
+
+### HOW IT WORKS (in your stack)
+
+You'll switch the server you run Django under: from `gunicorn` (WSGI) to `daphne` or `uvicorn` (ASGI). The Django app code stays mostly the same — it's the entry point that changes.
+
+---
+
+### CONCEPT: Django Channels + the Channel Layer
+
+**Django Channels** = the library that brings ASGI + WebSocket support to Django. It introduces three new building blocks:
+
+- **Consumers** — analogous to views, but for WebSockets. A class that handles a WebSocket connection's lifecycle: `connect`, `receive`, `disconnect`.
+- **Routing** — analogous to `urls.py`, but maps WebSocket URLs to consumers.
+- **Channel layer** — a shared message bus that lets multiple Django processes (and other services) talk to each other.
+
+### WHY THE CHANNEL LAYER EXISTS
+
+Imagine you have 4 Django worker processes, and 100 users connected via WebSocket — distributed randomly across the workers. Now FastAPI updates a registrant's status. How does that update reach all 100 WebSocket connections?
+
+Answer: workers can't talk to each other directly. They publish messages to a **shared bus** (the channel layer), and any worker holding a connection that's subscribed to the relevant "group" forwards the message down its WebSocket.
+
+Recommended channel layer backend: **Redis** (which you already have running).
+
+### KEY INSIGHT
+
+Each WebSocket connection joins one or more **groups** (e.g. `"dashboard_updates"`). When something changes, anyone — Django worker, FastAPI service, Celery task — can call `group_send("dashboard_updates", {...})` and every connected client in that group receives the message.
+
+This is the trick that lets your **FastAPI drain worker push updates to Django's WebSockets**, even though they're separate processes.
+
+### THE FULL FLOW (your project, after WebSockets)
+
+```
+Browser ─── ws:// ───┐
+                    │
+                    ▼
+              Django (ASGI / daphne)
+              ── consumer joins group "dashboard_updates"
+                    ▲
+                    │ group_send
+                    │
+              Channel Layer (Redis)
+                    ▲
+                    │ group_send
+                    │
+              FastAPI drain_worker
+              ── after writing to Postgres, push update
+```
+
+No more polling. Updates fan out instantly.
+
+### MAIN USE CASES
+
+- ✅ Real-time dashboards / feeds
+- ✅ Cross-process broadcast (your FastAPI → Django case)
+- ✅ Chat rooms (groups = rooms)
+- ❌ One-off async tasks — use Celery instead
+- ❌ Replacing all your views — WebSockets only for the things that need real-time
