@@ -47,6 +47,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -55,6 +56,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'registrants',
     'rest_framework',
+    'channels'
 ]
 
 MIDDLEWARE = [
@@ -84,6 +86,7 @@ TEMPLATES = [
     },
 ]
 
+ASGI_APPLICATION = 'registrant_dashboard.asgi.application'
 WSGI_APPLICATION = 'registrant_dashboard.wsgi.application'
 
 
